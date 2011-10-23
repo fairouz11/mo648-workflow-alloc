@@ -1,6 +1,7 @@
 package br.unicamp.ic.wfscheduler.sim;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ class BrokerImpl implements Broker
 	
 	private ArrayList<HostImpl> hosts;
 	private ArrayList<TaskImpl> tasks;
+	private Hashtable<TaskImpl, HostImpl> allocation;
 	
 	private IScheduler scheduler;
 	
@@ -39,10 +41,13 @@ class BrokerImpl implements Broker
 			long bandwidth, double processingCost,
 			IScheduler scheduler) throws Exception
 	{
+		Hashtable<br.unicamp.ic.wfscheduler.sim.input.Task, TaskImpl> taskMapping = 
+				new Hashtable<br.unicamp.ic.wfscheduler.sim.input.Task, TaskImpl>(tasks.size());
 		ArrayList<org.cloudbus.cloudsim.Host> hostList = new ArrayList<org.cloudbus.cloudsim.Host>(hosts.size());
 		ArrayList<Vm> vmList = new ArrayList<Vm>(hosts.size());
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>(tasks.size());
 		
+		this.allocation = new Hashtable<TaskImpl, HostImpl>(tasks.size());
 		this.hosts = new ArrayList<HostImpl>(hosts.size());
 		this.scheduler = scheduler;
 		this.tasks = new ArrayList<TaskImpl>(tasks.size());
@@ -58,6 +63,19 @@ class BrokerImpl implements Broker
 			TaskImpl ti = new TaskImpl(t.getLength(), t.getOutputSize(), this);
 			cloudletList.add(ti.getCsCloudlet());
 			this.tasks.add(ti);
+			
+			taskMapping.put(t, ti);
+		}
+		
+		// task dependencies
+		for (br.unicamp.ic.wfscheduler.sim.input.Task t : tasks)
+		{
+			TaskImpl ti = taskMapping.get(t);
+			
+			for (br.unicamp.ic.wfscheduler.sim.input.Task td : t.getDependencies())
+			{
+				ti.addDependencie(taskMapping.get(td));
+			}
 		}
 		
 		for (br.unicamp.ic.wfscheduler.sim.input.Host h : hosts)
@@ -71,8 +89,8 @@ class BrokerImpl implements Broker
 		datacenter = new Datacenter("datacenter", caracteristics, new VmAllocationPolicySimple(hostList),
 				new LinkedList<Storage>(), 0);
 		
-		dcBroker.submitCloudletList(cloudletList);
 		dcBroker.submitVmList(vmList);
+		dcBroker.submitCloudletList(cloudletList);		
 	}
 	
 	void start()
@@ -103,7 +121,7 @@ class BrokerImpl implements Broker
 		double totalCost = 0;
 		
 		for (TaskImpl t : tasks)
-			totalCost += t.getCsCloudlet().getProcessingCost();
+			totalCost += t.calculateProcessingCost(allocation.get(t));
 		
 		return totalCost;
 	}
@@ -114,7 +132,20 @@ class BrokerImpl implements Broker
 	 */
 	double getTotalTime()
 	{
-		return CloudSim.clock();
+		// searches for last executted task
+		double last = 0;
+		
+		for (TaskImpl t : tasks)
+		{
+			double ft = t.getCsCloudlet().getFinishTime();
+			
+			if ( ft > last )
+				last = ft;
+		}
+		
+		// TODO consider transmission time
+		
+		return last;
 	}
 	
 	@Override
@@ -140,6 +171,8 @@ class BrokerImpl implements Broker
 	{
 		TaskImpl ti = (TaskImpl)t;
 		HostImpl hi = (HostImpl)h;
+		
+		allocation.put(ti, hi);
 		
 		dcBroker.bindCloudletToVm(ti.getCsCloudlet().getCloudletId(),
 				hi.getCsVm().getId());

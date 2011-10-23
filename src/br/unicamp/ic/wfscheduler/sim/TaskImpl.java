@@ -33,6 +33,14 @@ class TaskImpl implements Task
 	}
 	
 	/**
+	 * Get processing cost if task was executed on host h
+	 */
+	double calculateProcessingCost(HostImpl h)
+	{
+		return cloudlet.getActualCPUTime() * h.getCost();
+	}
+	
+	/**
 	 * Add a dependent taks.
 	 * @param t dependent task
 	 */
