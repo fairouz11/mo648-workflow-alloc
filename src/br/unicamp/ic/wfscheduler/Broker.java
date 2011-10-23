@@ -27,6 +27,8 @@ public interface Broker
 	
 	/**
 	 * Assign task to be executed on host.
+	 * Note that there is no guarantee on dependency order. The scheduler implementation
+	 * must enforce any dependency policy.
 	 * @param t task to be executed
 	 * @param h host where execution should take place 
 	 */
