@@ -8,24 +8,34 @@
  */
 package br.unicamp.ic.wfscheduler.impl.pso;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class Position
 {
-	private double x_position;
+	private ArrayList<Double> position;
 	
-	public Position(double x_position)
+	public Position()
 	{
-		this.x_position = x_position;
+		this.position = new ArrayList<Double>();
 	}
 	
-	public void setPosition(double x_position)
+	public void addPosition(int index, double value)
 	{
-		this.x_position = x_position;
+		this.position.add(index, value);
 	}
 	
-	public double getPosition()
+	public void setPosition(int index, double value)
 	{
-		return x_position;
+		this.position.set(index, value);
+	}
+	
+	public ArrayList<Double> getPosition()
+	{
+		return position;
+	}
+	
+	public double getIndexValue(int index)
+	{
+		return position.get(index);
 	}
 }

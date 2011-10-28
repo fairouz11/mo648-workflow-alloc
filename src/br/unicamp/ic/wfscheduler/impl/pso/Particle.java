@@ -9,7 +9,6 @@
  */
 package br.unicamp.ic.wfscheduler.impl.pso;
 
-
 public class Particle
 {
 	private Position location;
