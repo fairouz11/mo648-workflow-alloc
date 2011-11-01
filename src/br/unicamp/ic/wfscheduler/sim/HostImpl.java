@@ -26,12 +26,18 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	
 	private BrokerImpl broker;
 	
+	/**
+	 * Available task's results.
+	 */
+	private ArrayList<TaskImpl> taskResults;
+	
 	public HostImpl(long mips, int processorCount, BrokerImpl broker)
 	{		
 		if (processorCount < 1)
 			throw new RuntimeException("Invalid processorCount");
 		
 		this.broker = broker;
+		this.taskResults = new ArrayList<TaskImpl>();
 		
 		List<Pe> peList = new ArrayList<Pe>((int)processorCount);
 		
@@ -63,6 +69,11 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	Vm getCsVm()
 	{
 		return vm;		
+	}
+	
+	void addTaskResult(TaskImpl t)
+	{
+		taskResults.add(t);
 	}
 
 	@Override

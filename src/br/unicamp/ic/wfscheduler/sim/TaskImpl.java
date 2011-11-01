@@ -67,4 +67,10 @@ class TaskImpl implements Task
 		return cloudlet.getCloudletOutputSize();
 	}
 
+	@Override
+	public boolean hasDependencies()
+	{
+		return dependencies != null && dependencies.size() > 0;
+	}
+
 }

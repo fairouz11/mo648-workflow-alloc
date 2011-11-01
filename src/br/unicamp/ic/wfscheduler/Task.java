@@ -20,6 +20,13 @@ public interface Task
 	public List<Task> getDependencies();
 	
 	/**
+	 * Get information about dependencies.
+	 * @return true if there are dependencies
+	 */
+	public boolean hasDependencies();
+		
+	
+	/**
 	 * Task output size in bytes
 	 * @return
 	 */

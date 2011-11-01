@@ -27,12 +27,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		scheduleWorkflow(tasks, hosts,deadline);
 	}
 
-	@Override
-	public void taskFinished(Task t, Host h) {
-		// TODO Auto-generated method stub
-
-	}
-
 	private long estimateMinimumTransferTime(Task task, List<Host> hosts) {
 		// We are considering uniform bandwidth
 		long mtt;

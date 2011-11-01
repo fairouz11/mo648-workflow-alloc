@@ -33,6 +33,7 @@ class BrokerImpl implements Broker
 	private ArrayList<HostImpl> hosts;
 	private ArrayList<TaskImpl> tasks;
 	private Hashtable<TaskImpl, HostImpl> allocation;
+	private Hashtable<TaskImpl, List<HostImpl>> transmission;
 	
 	private IScheduler scheduler;
 	
@@ -48,6 +49,7 @@ class BrokerImpl implements Broker
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>(tasks.size());
 		
 		this.allocation = new Hashtable<TaskImpl, HostImpl>(tasks.size());
+		this.transmission = new Hashtable<TaskImpl, List<HostImpl>>(tasks.size());
 		this.hosts = new ArrayList<HostImpl>(hosts.size());
 		this.scheduler = scheduler;
 		this.tasks = new ArrayList<TaskImpl>(tasks.size());
@@ -171,11 +173,30 @@ class BrokerImpl implements Broker
 	{
 		TaskImpl ti = (TaskImpl)t;
 		HostImpl hi = (HostImpl)h;
-		
+				
 		allocation.put(ti, hi);
 		
 		dcBroker.bindCloudletToVm(ti.getCsCloudlet().getCloudletId(),
 				hi.getCsVm().getId());
+	}
+
+	@Override
+	public void transmitResult(Task t, List<Host> destination) throws Exception
+	{
+		TaskImpl ti = (TaskImpl)t;
+		ArrayList<HostImpl> hl;
+		
+		if (allocation.get(ti) == null)
+			throw new Exception("Attempt to transmit the result of an unfinished task.");
+		
+		if (transmission.get(ti) != null)
+			throw new Exception("A transmit call for this result has already been made.");
+		
+		hl = new ArrayList<HostImpl>(destination.size());
+		for (Host h : destination)
+			hl.add((HostImpl)h);
+				
+		transmission.put(ti, hl);				
 	}
 
 }
