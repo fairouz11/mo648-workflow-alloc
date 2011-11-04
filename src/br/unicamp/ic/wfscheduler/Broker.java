@@ -37,6 +37,7 @@ public interface Broker
 	/**
 	 * Transmit the result of task t to each host in destination list.
 	 * The transmission in done in the same order of the list, one at time.
+	 * If you call this multiple times, the ordering between calls is kept.
 	 * @param t task which result should be transmitted
 	 * @param destination list of destinations
 	 */
