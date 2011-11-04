@@ -1,6 +1,8 @@
 package br.unicamp.ic.wfscheduler.impl.random;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
 
@@ -8,6 +10,7 @@ import br.unicamp.ic.wfscheduler.Broker;
 import br.unicamp.ic.wfscheduler.Host;
 import br.unicamp.ic.wfscheduler.IScheduler;
 import br.unicamp.ic.wfscheduler.Task;
+import br.unicamp.ic.wfscheduler.util.TaskTopolgicalOrdering;
 
 public class RandomScheduler implements IScheduler
 {
@@ -18,44 +21,56 @@ public class RandomScheduler implements IScheduler
 	public void startScheduler(Broker broker)
 	{		
 		Random rnd;
+		TaskTopolgicalOrdering tto;
+		ArrayList<Task> orderedTasks;
+		Hashtable<Task, Host> assignedTasks;
+		ArrayList<Host> trans;
 		
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
 		
 		rnd = new Random();
-	
-		/*
-		while (tasks.size() > 0)
+		tto = new TaskTopolgicalOrdering(tasks, new Comparator<Task>()
 		{
-			Task t = tasks.get(0);
+			@Override
+			public int compare(Task a, Task b)
+			{
+				if (a.getLength() < b.getLength())
+					return -1;
+				else if (a.getLength() > b.getLength())
+					return 1;
+				return 0;
+			}
+		});
+		
+		orderedTasks = tto.getSortedTasks();
+		assignedTasks = new Hashtable<Task, Host>(orderedTasks.size());
+		trans = new ArrayList<Host>();
+		
+		// for each task
+		while (orderedTasks.size() > 0)
+		{
+			Task t = orderedTasks.get(0);
+			// choose a random host to assign it to the task
 			Host h = hosts.get(rnd.nextInt(hosts.size()));
 			
-			broker.assign(t, h);
+			broker.assign(t, h); 
+			assignedTasks.put(t, h);
+							
+			// now, we have to transmit the dependencies to this host
+			// as we have topologically ordered the tasks, all dependencies
+			// should be assigned by now
+			trans.add(h);
 			
-			tasks.remove(0);
-		}*/
-		
-		ArrayList<Host> trans = new ArrayList<Host>();
-		
-		broker.assign(tasks.get(0), hosts.get(0));
-		broker.assign(tasks.get(1), hosts.get(0));
-		broker.assign(tasks.get(2), hosts.get(2));
-		
-		try
-		{
-			trans.add(hosts.get(2));
-			//trans.add(hosts.get(2));
-			broker.transmitResult(tasks.get(0), trans);
-			
+			for (Task dep : t.getDependencies())
+				broker.transmitResult(dep, trans);
+
 			trans.clear();
-			trans.add(hosts.get(2));
-			broker.transmitResult(tasks.get(1), trans);
-		} 
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}		
+			
+			orderedTasks.remove(0);
+		}
+		
+		return;
 	}
 	
 	public void taskFinished(Task t, Host h)
