@@ -1,5 +1,6 @@
 package br.unicamp.ic.wfscheduler.impl.random;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -15,14 +16,15 @@ public class RandomScheduler implements IScheduler
 	
 	@Override
 	public void startScheduler(Broker broker)
-	{
+	{		
 		Random rnd;
 		
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
 		
 		rnd = new Random();
-		
+	
+		/*
 		while (tasks.size() > 0)
 		{
 			Task t = tasks.get(0);
@@ -31,7 +33,26 @@ public class RandomScheduler implements IScheduler
 			broker.assign(t, h);
 			
 			tasks.remove(0);
-		}
+		}*/
+		
+		ArrayList<Host> trans = new ArrayList<Host>();
+		
+		broker.assign(tasks.get(0), hosts.get(0));
+		broker.assign(tasks.get(1), hosts.get(0));
+		
+		try
+		{
+			trans.add(hosts.get(1));
+			broker.transmitResult(tasks.get(1), trans);
+			trans.clear();
+		} 
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		
+		broker.assign(tasks.get(2), hosts.get(1));
 	}
 	
 	public void taskFinished(Task t, Host h)

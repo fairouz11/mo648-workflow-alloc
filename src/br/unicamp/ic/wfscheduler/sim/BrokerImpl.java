@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
@@ -19,7 +18,7 @@ import br.unicamp.ic.wfscheduler.IScheduler;
 import br.unicamp.ic.wfscheduler.Task;
 
 class BrokerImpl implements Broker
-{
+{	
 	private static final int costPerMem = 0;
 	private static final int costPerStorage = 0;
 	private static final int costPerBw = 0;
@@ -32,6 +31,8 @@ class BrokerImpl implements Broker
 	
 	private ArrayList<HostImpl> hosts;
 	private ArrayList<TaskImpl> tasks;
+	private Hashtable<Cloudlet, TaskImpl> cloudletMapping;
+	private Hashtable<org.cloudbus.cloudsim.Host, HostImpl> hostMapping;
 	private Hashtable<TaskImpl, HostImpl> allocation;
 	private Hashtable<TaskImpl, List<HostImpl>> transmission;
 	
@@ -48,6 +49,8 @@ class BrokerImpl implements Broker
 		ArrayList<Vm> vmList = new ArrayList<Vm>(hosts.size());
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>(tasks.size());
 		
+		this.hostMapping = new Hashtable<org.cloudbus.cloudsim.Host, HostImpl>(hosts.size());
+		this.cloudletMapping = new Hashtable<Cloudlet, TaskImpl>(tasks.size());
 		this.allocation = new Hashtable<TaskImpl, HostImpl>(tasks.size());
 		this.transmission = new Hashtable<TaskImpl, List<HostImpl>>(tasks.size());
 		this.hosts = new ArrayList<HostImpl>(hosts.size());
@@ -66,6 +69,8 @@ class BrokerImpl implements Broker
 			cloudletList.add(ti.getCsCloudlet());
 			this.tasks.add(ti);
 			
+			this.cloudletMapping.put(ti.getCsCloudlet(), ti);
+			
 			taskMapping.put(t, ti);
 		}
 		
@@ -76,7 +81,7 @@ class BrokerImpl implements Broker
 			
 			for (br.unicamp.ic.wfscheduler.sim.input.Task td : t.getDependencies())
 			{
-				ti.addDependencie(taskMapping.get(td));
+				ti.addDependency(taskMapping.get(td));
 			}
 		}
 		
@@ -85,11 +90,12 @@ class BrokerImpl implements Broker
 			HostImpl hi = new HostImpl(h.getMips(), h.getProcessorCount(), this);
 			vmList.add(hi.getCsVm());
 			this.hosts.add(hi);
+			this.hostMapping.put(hi.getCsHost(), hi);
 			hostList.add(hi.getCsHost());
 		}
 		
 		datacenter = new Datacenter("datacenter", caracteristics, new VmAllocationPolicySimple(hostList),
-				new LinkedList<Storage>(), 0);
+				new LinkedList<Storage>(), 0, this);
 		
 		dcBroker.submitVmList(vmList);
 		dcBroker.submitCloudletList(cloudletList);		
@@ -97,7 +103,7 @@ class BrokerImpl implements Broker
 	
 	void start()
 	{
-		scheduler.startScheduler(this);
+		scheduler.startScheduler(this);		
 		
 		CloudSim.startSimulation();
 		
@@ -150,6 +156,55 @@ class BrokerImpl implements Broker
 		return last;
 	}
 	
+	/**
+	 * Get host assigned to work on this task
+	 * @param task to query host for
+	 * @return host assigned to work on the task
+	 */
+	HostImpl getAssignedHost(TaskImpl task)
+	{
+		HostImpl h = allocation.get(task);
+		
+		if (h == null)
+			throw new Error("Task not assigned.");
+		
+		return h;
+	}
+	
+	/**
+	 * Find a task based on its cloudlet
+	 * @param cloudlet to search for
+	 * @return task that has cloudlet
+	 */
+	TaskImpl getTask(Cloudlet cloudlet)
+	{
+		TaskImpl t;
+		
+		t = cloudletMapping.get(cloudlet);
+		
+		if (t == null)
+			throw new Error("Couldn't find task!");
+		
+		return t;
+	}
+	
+	/**
+	 * Find a host based on its cloudsim host
+	 * @param host to search for
+	 * @return host that has cloudsim host
+	 */
+	HostImpl getHost(org.cloudbus.cloudsim.Host host)
+	{
+		HostImpl h;
+		
+		h = hostMapping.get(host);
+		
+		if (h == null)
+			throw new Error("Couldn't find host!");
+		
+		return h;
+	}
+	
 	@Override
 	public long getBandwidth()
 	{
@@ -161,12 +216,23 @@ class BrokerImpl implements Broker
 	{
 		return new ArrayList<Task>(tasks);
 	}
+	
+	List<TaskImpl> getInternalTasks()
+	{
+		return tasks;
+	}
 
 	@Override
 	public List<Host> getHosts()
 	{
 		return new ArrayList<Host>(hosts);
 	}
+	
+	List<HostImpl> getInternalHosts()
+	{
+		return hosts;
+	}
+			
 
 	@Override
 	public void assign(Task t, Host h)
@@ -185,18 +251,26 @@ class BrokerImpl implements Broker
 	{
 		TaskImpl ti = (TaskImpl)t;
 		ArrayList<HostImpl> hl;
+		HostImpl responsibleHost;
 		
 		if (allocation.get(ti) == null)
-			throw new Exception("Attempt to transmit the result of an unfinished task.");
+			throw new Exception("Attempt to transmit the result of a not allocated task.");
 		
 		if (transmission.get(ti) != null)
 			throw new Exception("A transmit call for this result has already been made.");
 		
+		responsibleHost = getAssignedHost(ti);
+		
 		hl = new ArrayList<HostImpl>(destination.size());
+		
 		for (Host h : destination)
-			hl.add((HostImpl)h);
+		{
+			HostImpl dh = (HostImpl)h;
+			hl.add(dh);
+			responsibleHost.transmit(ti, dh);
+		}
 				
-		transmission.put(ti, hl);				
+		transmission.put(ti, hl);
 	}
 
 }

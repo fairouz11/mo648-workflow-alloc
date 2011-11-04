@@ -39,6 +39,7 @@ public class Main
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		
 		hosts.add(new Host(1000, 1));
+		hosts.add(new Host(1000, 1));
 		tasks.add(new Task(25000, 0));
 		tasks.add(new Task(25000, 0));
 		tasks.add(new Task(50000, 0));
