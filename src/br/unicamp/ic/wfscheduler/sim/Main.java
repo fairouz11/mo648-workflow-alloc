@@ -40,10 +40,12 @@ public class Main
 		
 		hosts.add(new Host(1000, 1));
 		hosts.add(new Host(1000, 1));
-		tasks.add(new Task(25000, 10000));
+		hosts.add(new Host(1000, 1));
 		tasks.add(new Task(25000, 20000));
-		tasks.add(new Task(50000, 10000));
+		tasks.add(new Task(10000, 10000));
+		tasks.add(new Task(25000, 10000));
 		
+		tasks.get(2).addDependencies(tasks.get(0));
 		tasks.get(2).addDependencies(tasks.get(1));
 		
 		CloudSim.init(1, Calendar.getInstance(), false);

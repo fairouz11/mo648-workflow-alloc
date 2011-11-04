@@ -39,20 +39,23 @@ public class RandomScheduler implements IScheduler
 		
 		broker.assign(tasks.get(0), hosts.get(0));
 		broker.assign(tasks.get(1), hosts.get(0));
+		broker.assign(tasks.get(2), hosts.get(2));
 		
 		try
 		{
-			trans.add(hosts.get(1));
-			broker.transmitResult(tasks.get(1), trans);
+			trans.add(hosts.get(2));
+			//trans.add(hosts.get(2));
+			broker.transmitResult(tasks.get(0), trans);
+			
 			trans.clear();
+			trans.add(hosts.get(2));
+			broker.transmitResult(tasks.get(1), trans);
 		} 
 		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-		
-		broker.assign(tasks.get(2), hosts.get(1));
 	}
 	
 	public void taskFinished(Task t, Host h)

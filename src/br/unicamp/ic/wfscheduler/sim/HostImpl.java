@@ -132,26 +132,34 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 		double nextEvent;
 		double currentTime = CloudSim.clock();
 		
-		// finish transmissions
-		for (HostImpl host : currentTransmission.keySet())
+		if ( !currentTransmission.isEmpty() )
 		{
-			Transmission t = currentTransmission.get(host);
-
-			// if current transmission is not null for destination host
-			if (t != null)
+			ArrayList<HostImpl> removeList = new ArrayList<HostImpl>(currentTransmission.size());
+			
+			// finish transmissions
+			for (HostImpl host : currentTransmission.keySet())
 			{
-				// let's see if it's finished
-				if (t.getFinishTime() <= currentTime)
+				Transmission t = currentTransmission.get(host);
+	
+				// if current transmission is not null for destination host
+				if (t != null)
 				{
-					// it's finished, let's free the transmission channel
-					currentTransmission.remove(host);
-					t.finishTransmission();
-					
-					Log.printLine(CloudSim.clock()+": " +
-						"Host #" + this.host.getId()+ ": Transmission finished: Task #"+
-							t.getTask().getCsCloudlet().getCloudletId()+" to Host #"+host.getCsHost().getId()+".");					
-				}	
+					// let's see if it's finished
+					if (t.getFinishTime() <= currentTime)
+					{
+						// it's finished, let's free the transmission channel					
+						removeList.add(host);
+						t.finishTransmission();
+						
+						Log.printLine(CloudSim.clock()+": " +
+							"Host #" + this.host.getId()+ ": Transmission finished: Task #"+
+								t.getTask().getCsCloudlet().getCloudletId()+" to Host #"+host.getCsHost().getId()+".");					
+					}	
+				}
 			}
+			
+			for (HostImpl h : removeList)
+				currentTransmission.remove(h);
 		}
 		
 		if (transmissionList.size() == 0)

@@ -105,6 +105,8 @@ class BrokerImpl implements Broker
 	{
 		scheduler.startScheduler(this);		
 		
+		validateInput();
+		
 		CloudSim.startSimulation();
 		
 		CloudSim.stopSimulation();
@@ -166,7 +168,7 @@ class BrokerImpl implements Broker
 		HostImpl h = allocation.get(task);
 		
 		if (h == null)
-			throw new Error("Task not assigned.");
+			throw new Error("Task #"+ task.getCsCloudlet().getCloudletId() +" was not assigned.");
 		
 		return h;
 	}
@@ -232,7 +234,52 @@ class BrokerImpl implements Broker
 	{
 		return hosts;
 	}
+	
+	void validateInput()
+	{
+		StringBuilder error = new StringBuilder();
+		
+		// for each task verify if it was allocated
+		for (TaskImpl t : tasks)
+		{
+			if (!allocation.containsKey(t))
+				error.append("Tasks #" + t.getCsCloudlet().getCloudletId() + " was not assigned to any host.\n");
+		}
+		
+		// for each task, verify if dependencies where transmitted
+		for (TaskImpl t : tasks)
+		{			
+			HostImpl destination = getAssignedHost(t);
+			int tID = t.getCsCloudlet().getCloudletId();
+			int destID = destination.getCsHost().getId();
 			
+			// which has dependencies
+			for (TaskImpl dep : t.getInternalDependencies() )
+			{				
+				// every dependency have to be transmitted
+				HostImpl sender = getAssignedHost(dep);
+				int senderID = sender.getCsHost().getId();
+				int depID = dep.getCsCloudlet().getCloudletId();
+				
+				// if it's not on the same host
+				if (destination == sender)
+					continue;
+				
+				if (!transmission.get(dep).contains(destination))
+					error.append("Tasks #" + tID + " (on host #"+ senderID + 
+							") depends on task #" + depID + " (on host #" + destID + ") and its result was not transmitted.\n");
+			}
+		}
+		
+		// TODO: verify cyclic dependencies
+		
+		if (error.length() > 0)
+		{
+			// there are error
+			System.err.println(error.toString());
+			throw new Error("Scheduler allocation is not valid and will not work. See stderr for more info.");
+		}
+	}
 
 	@Override
 	public void assign(Task t, Host h)
