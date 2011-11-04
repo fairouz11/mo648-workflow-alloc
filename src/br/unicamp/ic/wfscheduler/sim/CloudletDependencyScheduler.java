@@ -7,7 +7,7 @@ import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletScheduler;
 import org.cloudbus.cloudsim.CloudletSchedulerSpaceShared;
 import org.cloudbus.cloudsim.Pe;
-import org.cloudbus.cloudsim.ResCloudlet;
+import br.unicamp.ic.wfscheduler.sim.ResCloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 
 public class CloudletDependencyScheduler extends CloudletScheduler
@@ -47,16 +47,16 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 	}
 	
 	@Override
-	public void cloudletFinish(ResCloudlet rcl) 
+	public void cloudletFinish(org.cloudbus.cloudsim.ResCloudlet rcl) 
 	{
 		rcl.setCloudletStatus(Cloudlet.SUCCESS);
 		rcl.finalizeCloudlet();
-		getCloudletFinishedList().add(rcl);
+		getCloudletFinishedList().add((ResCloudlet)rcl);
 		usedPes -= rcl.getPesNumber();
 		
 		// inform host that task has finished
 		TaskImpl task = broker.getTask(rcl.getCloudlet());
-		broker.getAssignedHost(task).addTaskResult(task);
+		host.addTaskResult(task, rcl.getClouddletFinishTime());
 	}
 	
 	double getCapacity()
@@ -129,7 +129,7 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 			
 			rcl.updateCloudletFinishedSoFar((long) (capacity * timeSpam * rcl.getPesNumber()));
 			
-			nextEvent = Math.min(growCloudletForDependency(task, rcl.getCloudlet()), nextEvent);			
+			Math.min(growCloudletForDependency(task, rcl.getCloudlet()), nextEvent);			
 		
 			if (rcl.getRemainingCloudletLength() == 0.0) 
 			{
@@ -494,7 +494,7 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 	 * @see org.cloudbus.cloudsim.CloudletScheduler#getTotalCurrentAvailableMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet, java.util.List)
 	 */
 	@Override
-	public double getTotalCurrentAvailableMipsForCloudlet(ResCloudlet rcl, List<Double> mipsShare) {
+	public double getTotalCurrentAvailableMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet rcl, List<Double> mipsShare) {
 		double capacity = 0.0;
 		int cpus = 0;
 		for (Double mips : mipsShare) { // count the cpus available to the vmm
@@ -512,7 +512,7 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 	 * @see org.cloudbus.cloudsim.CloudletScheduler#getTotalCurrentAllocatedMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet, double)
 	 */
 	@Override
-	public double getTotalCurrentAllocatedMipsForCloudlet(ResCloudlet rcl, double time) {
+	public double getTotalCurrentAllocatedMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet rcl, double time) {
 		// TODO Auto-generated method stub
 		return 0.0;
 	}
@@ -521,7 +521,7 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 	 * @see org.cloudbus.cloudsim.CloudletScheduler#getTotalCurrentRequestedMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet, double)
 	 */
 	@Override
-	public double getTotalCurrentRequestedMipsForCloudlet(ResCloudlet rcl, double time) {
+	public double getTotalCurrentRequestedMipsForCloudlet(org.cloudbus.cloudsim.ResCloudlet rcl, double time) {
 		// TODO Auto-generated method stub
 		return 0.0;
 	}

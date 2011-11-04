@@ -39,9 +39,9 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	private Hashtable<HostImpl, Transmission> currentTransmission;
 	
 	/**
-	 * Available results on this host.
+	 * Available results on this host - <task, arrivedTime>.
 	 */
-	private ArrayList<TaskImpl> availableResults;
+	private Hashtable<TaskImpl, Double> availableResults;
 	
 	
 	public HostImpl(long mips, int processorCount, BrokerImpl broker)
@@ -52,7 +52,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 		this.broker = broker;
 		this.transmissionList = new ArrayList<Transmission>();
 		this.currentTransmission = new Hashtable<HostImpl, Transmission>();
-		this.availableResults = new ArrayList<TaskImpl>();
+		this.availableResults = new Hashtable<TaskImpl, Double>();
 		
 		List<Pe> peList = new ArrayList<Pe>((int)processorCount);
 		
@@ -212,9 +212,11 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	 */
 	double getResultReadyTime(TaskImpl task)
 	{
+		Double arrivedTime = availableResults.get(task); 
+
 		// I have the result right here!
-		if (availableResults.contains(task))
-			return 0;
+		if (arrivedTime != null)
+			return arrivedTime.doubleValue();
 		
 		// get the host which was assigned to this task
 		HostImpl sender = broker.getAssignedHost(task);
@@ -270,10 +272,11 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	/**
 	 * Informs this host that a task's result has arrived
 	 * @param task task whose results have arrived 
+	 * @param arrivedTime time when results have arrived
 	 */
-	void addTaskResult(TaskImpl task)
+	void addTaskResult(TaskImpl task, double arrivedTime)
 	{
-		availableResults.add(task);
+		availableResults.put(task, arrivedTime);
 	}
 	
 	/**

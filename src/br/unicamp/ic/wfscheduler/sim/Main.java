@@ -33,16 +33,16 @@ public class Main
 	
 	private static BrokerImpl prepare(String[] args, IScheduler scheduler) throws Exception
 	{
-		long bandwidth = 10000;
+		long bandwidth = 1000;
 		double processingCost = 0.25;
 		ArrayList<Host> hosts = new ArrayList<Host>();
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		
 		hosts.add(new Host(1000, 1));
 		hosts.add(new Host(1000, 1));
-		tasks.add(new Task(25000, 0));
-		tasks.add(new Task(25000, 0));
-		tasks.add(new Task(50000, 0));
+		tasks.add(new Task(25000, 10000));
+		tasks.add(new Task(25000, 20000));
+		tasks.add(new Task(50000, 10000));
 		
 		tasks.get(2).addDependencies(tasks.get(1));
 		

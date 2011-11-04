@@ -57,6 +57,6 @@ class Transmission
 	public void finishTransmission()
 	{	
 		// inform host
-		host.addTaskResult(task);
+		host.addTaskResult(task, getFinishTime());
 	}
 }
