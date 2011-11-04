@@ -34,7 +34,7 @@ class BrokerImpl implements Broker
 	private Hashtable<Cloudlet, TaskImpl> cloudletMapping;
 	private Hashtable<org.cloudbus.cloudsim.Host, HostImpl> hostMapping;
 	private Hashtable<TaskImpl, HostImpl> allocation;
-	private Hashtable<TaskImpl, List<HostImpl>> transmission;
+	private Hashtable<TaskImpl, ArrayList<HostImpl>> transmission;
 	
 	private IScheduler scheduler;
 	
@@ -52,7 +52,7 @@ class BrokerImpl implements Broker
 		this.hostMapping = new Hashtable<org.cloudbus.cloudsim.Host, HostImpl>(hosts.size());
 		this.cloudletMapping = new Hashtable<Cloudlet, TaskImpl>(tasks.size());
 		this.allocation = new Hashtable<TaskImpl, HostImpl>(tasks.size());
-		this.transmission = new Hashtable<TaskImpl, List<HostImpl>>(tasks.size());
+		this.transmission = new Hashtable<TaskImpl, ArrayList<HostImpl>>(tasks.size());
 		this.hosts = new ArrayList<HostImpl>(hosts.size());
 		this.scheduler = scheduler;
 		this.tasks = new ArrayList<TaskImpl>(tasks.size());
@@ -294,30 +294,38 @@ class BrokerImpl implements Broker
 	}
 
 	@Override
-	public void transmitResult(Task t, List<Host> destination) throws Exception
+	public void transmitResult(Task t, List<Host> destination)
 	{
 		TaskImpl ti = (TaskImpl)t;
 		ArrayList<HostImpl> hl;
 		HostImpl responsibleHost;
 		
 		if (allocation.get(ti) == null)
-			throw new Exception("Attempt to transmit the result of a not allocated task.");
-		
-		if (transmission.get(ti) != null)
-			throw new Exception("A transmit call for this result has already been made.");
+			throw new Error("Attempt to transmit the result of a not allocated task.");
 		
 		responsibleHost = getAssignedHost(ti);
 		
-		hl = new ArrayList<HostImpl>(destination.size());
+		hl = transmission.get(ti);
 		
+		if (hl == null)
+		{
+			hl = new ArrayList<HostImpl>(destination.size());
+			transmission.put(ti, hl);
+		}
+		
+		// for each destination
 		for (Host h : destination)
 		{
 			HostImpl dh = (HostImpl)h;
-			hl.add(dh);
-			responsibleHost.transmit(ti, dh);
+			
+			// if destination has not yet been added
+			if (!hl.contains(dh))
+			{
+				// add it
+				hl.add(dh);
+				responsibleHost.transmit(ti, dh);
+			}
 		}
-				
-		transmission.put(ti, hl);
 	}
 
 }

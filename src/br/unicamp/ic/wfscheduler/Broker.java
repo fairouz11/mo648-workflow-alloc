@@ -39,7 +39,6 @@ public interface Broker
 	 * The transmission in done in the same order of the list, one at time.
 	 * @param t task which result should be transmitted
 	 * @param destination list of destinations
-	 * throws Exception if task t was not allocated before the transmit request or if a previous call to transmit the same task was already been made.
 	 */
-	public void transmitResult(Task t, List<Host> destination) throws Exception;
+	public void transmitResult(Task t, List<Host> destination);
 }
