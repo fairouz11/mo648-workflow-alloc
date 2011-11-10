@@ -20,6 +20,8 @@ public interface IScheduler
 	
 	/**
 	 * Callback when a transmission is finished.
+	 * When a task is executed on a host H, may there be a transmission from H to H
+	 * with 0 delay.
 	 * @param task task which output data was sent
 	 * @param sender host which sent data
 	 * @param destination host which received data

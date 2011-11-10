@@ -1,4 +1,4 @@
-package br.unicamp.ic.wfscheduler.roundrobin;
+package br.unicamp.ic.wfscheduler.impl.roundrobin;
 
 import java.util.ArrayList;
 import java.util.Comparator;
