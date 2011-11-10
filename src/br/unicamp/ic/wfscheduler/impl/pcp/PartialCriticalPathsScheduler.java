@@ -11,9 +11,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
 	private List<Host> hosts;
 	private long bandwidth;
-	private HashMap<Task, Long> constraints;
+
 	private HashMap<Task, Assignment> assignments;
 	private HashMap<Task, Long> schedulings;
+	private HashMap<Task, Long> constraints;
 	private HashMap<Task, Long> METs;
 	private HashMap<Task, Long> MTTs;
 	private HashMap<Task, Long> ESTs;
@@ -24,7 +25,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		hosts = broker.getHosts();
 		bandwidth = broker.getBandwidth();
 		long deadline = 999999998;
-		scheduleWorkflow(tasks, hosts,deadline);
+		scheduleWorkflow(tasks, hosts, deadline);
 	}
 
 	@Override
@@ -61,13 +62,14 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return met;
 	}
 
-	private long estimateEarliestExecutionTime(Task task, List<Host> hosts) {
+	private long estimateEarliestStartTime(Task task, List<Host> hosts) {
 		long maxEST = 0;
 		if (ESTs.containsKey(task)) {
 			maxEST = ESTs.get(task);
 		} else {
 			Task criticalParent = findCriticalParent(task, hosts);
-			maxEST = estimateEarliestExecutionTime(criticalParent, hosts);
+			//maxEST = estimateEarliestStartTime(criticalParent, hosts);
+			maxEST = estimateEarliestFinishTime(criticalParent, hosts);
 		}
 		ESTs.put(task, maxEST);
 		return maxEST;
@@ -80,10 +82,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (!schedulings.containsKey(parent)) {
-				long parentEST = estimateEarliestExecutionTime(parent, hosts);
-				long parentMET = estimateMinimumExecutionTime(parent, hosts);
-				long parentMTT = estimateMinimumTransferTime(parent, hosts);
-				long est = parentEST + parentMET + parentMTT;
+				long est = estimateEarliestFinishTime(parent, hosts);
 				if (maxEST < est) {
 					criticalParent = parent;
 					maxEST = est;
@@ -93,6 +92,15 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return criticalParent;
 	}
 
+	private long estimateEarliestFinishTime(Task task,
+			List<Host> hosts) {
+		long parentEST = estimateEarliestStartTime(task, hosts);
+		long parentMET = estimateMinimumExecutionTime(task, hosts);
+		long parentMTT = estimateMinimumTransferTime(task, hosts);
+		long eft = parentEST + parentMET + parentMTT;
+		return eft;
+	}
+	
 	private List<Task> addingTasksEntryAndExit(List<Task> tasks, Task entry,
 			Task exit) {
 
@@ -134,18 +142,19 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 
 	private void scheduleWorkflow(List<Task> task, List<Host> hosts,
 			long deadline) {
-		
+
 		schedulings = new HashMap<Task, Long>();
-		METs= new HashMap<Task, Long>();
-		MTTs= new HashMap<Task, Long>();
-		ESTs= new HashMap<Task, Long>();
-		
+		METs = new HashMap<Task, Long>();
+		MTTs = new HashMap<Task, Long>();
+		ESTs = new HashMap<Task, Long>();
+
 		Task entry = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
 		Task exit = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
 		tasks = addingTasksEntryAndExit(tasks, entry, exit);
 		schedulings.put(entry, (long) 0);
 		schedulings.put(exit, (long) deadline);
-		estimateEarliestExecutionTime(exit, hosts);
+		constraints = new HashMap<Task, Long>();
+	//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
 		if (ScheduleParents(exit)) {
 			StartAssignmens();
 		}
@@ -157,16 +166,35 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 		Task taskI = task;
 		ArrayList<Task> criticalPath = new ArrayList<Task>();
-		while(hasUnscheduledParents(taskI)){
+		while (hasUnscheduledParents(taskI)) {
 			Task criticalParent = findCriticalParent(taskI, hosts);
 			criticalPath.add(0, criticalParent);
 			taskI = criticalParent;
 		}
-		constraints = new HashMap<Task, Long>();
-		while(!criticalPath.isEmpty()){
-			//PAREI AQUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		
+		while (!isScheduled(criticalPath)) {
+			if(!SchedulePath(criticalPath)){
+				return false;//Set t failure and SugestedStartTime will be resolved in SchedulePath
+			}
+			
 		}
+		return ScheduleParents(task);
+	}
+
+	
+
+	private boolean SchedulePath(ArrayList<Task> criticalPath) {
+		// TODO Auto-generated method stub
 		return false;
+	}
+
+	private boolean isScheduled(ArrayList<Task> criticalPath) {
+		boolean isScheduled = true;
+		int i = 0;
+		while (i < criticalPath.size() && isScheduled == true) {
+			isScheduled = schedulings.containsKey(criticalPath.get(i));
+		}
+		return isScheduled;
 	}
 
 	private boolean hasUnscheduledParents(Task task) {
@@ -174,7 +202,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		int i = 0;
 		while (i < task.getDependencies().size()
 				&& hasUnscheduledParents == false) {
-			hasUnscheduledParents = schedulings.containsKey(task.getDependencies().get(i));
+			hasUnscheduledParents = schedulings.containsKey(task
+					.getDependencies().get(i));
 		}
 		return hasUnscheduledParents;
 	}
