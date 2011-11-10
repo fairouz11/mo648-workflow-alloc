@@ -3,42 +3,50 @@
  * 
  * Description:
  * In the PSO heuristic each particle has a velocity that is changed after each
- * iteration of the algorithm. The movement of each particle is coordinated by a velocity.
+ * iteration of the algorithm. The movement of a particle is coordinated by its velocity.
+ * Each dimension of a particle has its own velocity value.
  */
 package br.unicamp.ic.wfscheduler.impl.pso;
 
-import java.util.ArrayList;
+import java.util.Hashtable;
+
+import br.unicamp.ic.wfscheduler.Task;
 
 
-public class Velocity implements Constants
+public class Velocity
 {
-	public ArrayList<Double> velocity;
+	private Hashtable<Task, Double> velocity;
 	
 	/**
-	 * Construtor da classe
+	 * Constructor
 	 */
 	public Velocity()
 	{
-		this.velocity = new ArrayList<Double>();
+		this.velocity = new Hashtable<Task, Double>();
 	}
 	
-	public ArrayList<Double> getVelocity()
+	public Velocity(int dimension)
+	{
+		this.velocity = new Hashtable<Task, Double>(dimension);
+	}
+	
+	public Hashtable<Task, Double> getVelocity()
 	{
 		return velocity;
 	}
 	
-	public void addVelocity(int index, double value)
+	public void addVelocity(Task t, double value)
 	{
-		this.velocity.add(index, value);
+		this.velocity.put(t, value);
 	}
 	
-	public void setVelocity(int index, double value)
+	public void setVelocity(Task t, double value)
 	{
-		this.velocity.set(index, value);
+		addVelocity(t, value);
 	}
 	
-	public double getIndexValue(int index)
+	public double getIndexValue(Task t)
 	{
-		return velocity.get(index);
+		return velocity.get(t);
 	}
 }

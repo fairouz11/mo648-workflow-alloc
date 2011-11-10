@@ -4,38 +4,45 @@
  * Description:
  * Each particle has a position. At any instance of time the position is influenced by its
  * best position and the position of the best particle in the problem space.
- * In our implementation the particle has a position in a 5-Dimensional space. 
+ * Each dimension of the particle has its own position value.
  */
 package br.unicamp.ic.wfscheduler.impl.pso;
 
-import java.util.ArrayList;
+import java.util.Hashtable;
+
+import br.unicamp.ic.wfscheduler.*;
 
 public class Position
 {
-	private ArrayList<Double> position;
+	private Hashtable<Task, Integer> position;
 	
 	public Position()
 	{
-		this.position = new ArrayList<Double>();
+		this.position = new Hashtable<Task, Integer>();
 	}
 	
-	public void addPosition(int index, double value)
+	public Position(int dimension)
 	{
-		this.position.add(index, value);
+		this.position = new Hashtable<Task, Integer>(dimension);
 	}
 	
-	public void setPosition(int index, double value)
+	public void addPosition(Task t, int value)
 	{
-		this.position.set(index, value);
+		this.position.put(t, value);
 	}
 	
-	public ArrayList<Double> getPosition()
+	public void setPosition(Task t, int value)
+	{
+		addPosition(t, value);
+	}
+	
+	public Hashtable<Task, Integer> getPosition()
 	{
 		return position;
 	}
 	
-	public double getIndexValue(int index)
+	public int getIndexValue(Task t)
 	{
-		return position.get(index);
+		return position.get(t);
 	}
 }

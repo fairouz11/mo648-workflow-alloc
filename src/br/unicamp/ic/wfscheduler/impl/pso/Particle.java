@@ -2,7 +2,7 @@
  * Particle Class
  * 
  * Description:
- * At this model of the PSO heuristic the particle element represents a mapping of resource to a task.
+ * At this model of the PSO heuristic the particle represents a mapping of resource to a task.
  * If an input workflow has 5 tasks than each generated particle will have 5-Dimension
  * because of 5 tasks and the content of each dimension of the particles will be the
  * compute resource (host number) assigned to that task.
@@ -15,15 +15,20 @@ public class Particle
 	private Velocity velocity;
 	private double fitness;
 	
-	public void calculateFitness()
-	{
-		//Ainda tenho que decifrar o que colocar aqui.
-	}
+	public Particle(int dimension){
+		this.fitness = 0;
+		this.location = new Position(dimension);
+		this.velocity = new Velocity(dimension);
+	}	
 	
 	public double getFitness()
 	{
-		calculateFitness();
 		return fitness;
+	}
+	
+	public void setFitness(double fitness)
+	{
+		this.fitness = fitness;
 	}
 	
 	public Position getLocation()
