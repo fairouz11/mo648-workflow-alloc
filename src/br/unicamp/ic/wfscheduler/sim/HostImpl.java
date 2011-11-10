@@ -285,6 +285,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	void addTaskResult(TaskImpl task, double arrivedTime)
 	{
 		availableResults.put(task, arrivedTime);
+		broker.transmissionFinished(task, this);
 	}
 	
 	/**

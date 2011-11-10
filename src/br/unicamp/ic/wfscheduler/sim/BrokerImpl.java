@@ -58,7 +58,7 @@ class BrokerImpl implements Broker
 		this.tasks = new ArrayList<TaskImpl>(tasks.size());
 		this.bandwidth = bandwidth;
 		this.processingCost = processingCost;
-		this.dcBroker = new DatacenterBroker();
+		this.dcBroker = new DatacenterBroker(this);
 		this.caracteristics = new DatacenterCharacteristics("X86", "linux", "Xen", 
 				hostList, 10, processingCost, costPerMem, costPerStorage, costPerBw);
 		
@@ -103,9 +103,7 @@ class BrokerImpl implements Broker
 	
 	void start()
 	{
-		scheduler.startScheduler(this);		
-		
-		validateInput();
+		scheduler.startScheduler(this);
 		
 		CloudSim.startSimulation();
 		
@@ -235,7 +233,26 @@ class BrokerImpl implements Broker
 		return hosts;
 	}
 	
-	void validateInput()
+	void taskFinished(Cloudlet cloudlet)
+	{
+		Task t = getTask(cloudlet);
+		Host h = allocation.get(t);
+		
+		scheduler.taskFinished(t, h);
+	}
+	
+	void transmissionFinished(Task taskSent, HostImpl dest)
+	{
+		Host sender = allocation.get(taskSent);
+		scheduler.transmissionFinished(taskSent, sender, dest);
+	}
+	
+	public double getClock()
+	{
+		return CloudSim.clock();
+	}
+	
+	public void validateInput()
 	{
 		StringBuilder error = new StringBuilder();
 		

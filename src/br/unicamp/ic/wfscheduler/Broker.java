@@ -26,6 +26,12 @@ public interface Broker
 	public List<Host> getHosts();
 	
 	/**
+	 * Get current clock time.
+	 * @return current clock.
+	 */
+	public double getClock();
+	
+	/**
 	 * Assign task to be executed on host.
 	 * Note that there is no guarantee on dependency order. The scheduler implementation
 	 * must enforce any dependency policy.
@@ -42,4 +48,12 @@ public interface Broker
 	 * @param destination list of destinations
 	 */
 	public void transmitResult(Task t, List<Host> destination);
+	
+	/**
+	 * Validate allocation input.
+	 * Verifies if all task were allocated and if transmissions were assigned.
+	 * An error is thrown if any issue is encountered.
+	 * You may call this method after you've allocated all tasks and transmission.
+	 */
+	public void validateInput();
 }
