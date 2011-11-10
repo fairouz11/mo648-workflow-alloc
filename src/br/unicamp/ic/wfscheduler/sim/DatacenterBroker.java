@@ -50,6 +50,8 @@ public class DatacenterBroker extends org.cloudbus.cloudsim.DatacenterBroker
 		
 		cloudletsSubmitted--;
 		
+		broker.taskFinished(cloudlet);
+		
 		checkStopCriteria();
 	}
 	
@@ -65,4 +67,36 @@ public class DatacenterBroker extends org.cloudbus.cloudsim.DatacenterBroker
 			finishExecution();
 		}
 	}
+	
+	@Override
+	protected void submitCloudlets() {
+		int vmIndex = 0;
+		for (Cloudlet cloudlet : getCloudletList()) 
+		{
+			Vm vm;
+			if (cloudlet.getVmId() != -1) 
+			{
+				//submit to the specific vm
+				vm = VmList.getById(getVmsCreatedList(), cloudlet.getVmId());
+				if (vm == null) { // vm was not created
+					Log.printLine(CloudSim.clock()+": "+getName()+ ": Postponing execution of cloudlet "+cloudlet.getCloudletId()+": bount VM not available");
+					continue;
+				}
+			
+				Log.printLine(CloudSim.clock()+": "+getName()+ ": Sending cloudlet "+cloudlet.getCloudletId()+" to VM #"+vm.getId());
+				cloudlet.setVmId(vm.getId());
+				sendNow(getVmsToDatacentersMap().get(vm.getId()), CloudSimTags.CLOUDLET_SUBMIT, cloudlet);
+				cloudletsSubmitted++;
+				vmIndex = (vmIndex + 1) % getVmsCreatedList().size();
+				getCloudletSubmittedList().add(cloudlet);
+			}
+		}
+		
+		// remove submitted cloudlets from waiting list
+		for (Cloudlet cloudlet : getCloudletSubmittedList()) 
+		{
+			getCloudletList().remove(cloudlet);
+		}
+	}
+	
 }
