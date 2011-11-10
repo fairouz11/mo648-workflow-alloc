@@ -26,5 +26,5 @@ public interface IScheduler
 	 * @param sender host which sent data
 	 * @param destination host which received data
 	 */
-	public void transmissionFinished(Task task, Host sender, Host destionation);	
+	public void transmissionFinished(Task task, Host sender, Host destination);	
 }
