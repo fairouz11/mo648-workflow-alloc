@@ -177,4 +177,18 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public void taskFinished(Task task, Host host)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void transmissionFinished(Task task, Host sender, Host destionation)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 }
