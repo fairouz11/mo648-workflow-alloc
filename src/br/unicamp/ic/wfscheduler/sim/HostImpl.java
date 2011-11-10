@@ -317,6 +317,12 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	}
 	
 	@Override
+	public int getID()
+	{		
+		return host.getId();		
+	}
+	
+	@Override
 	public long getProcessingSpeed()
 	{
 		return host.getTotalMips();

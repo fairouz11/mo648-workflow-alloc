@@ -166,6 +166,12 @@ class TaskImpl implements Task
 	}
 	
 	@Override
+	public int getID()
+	{
+		return cloudlet.getCloudletId();		
+	}
+	
+	@Override
 	public long getLength()
 	{
 		return cloudlet.getCloudletLength();
