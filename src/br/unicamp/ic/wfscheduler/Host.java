@@ -6,6 +6,12 @@ package br.unicamp.ic.wfscheduler;
 public interface Host
 {
 	/**
+	 * Host's unique id.
+	 * @return host's id
+	 */
+	public int getID();
+	
+	/**
 	 * Host's processing speed (in MIPS).
 	 * @return
 	 */

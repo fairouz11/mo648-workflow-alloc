@@ -1,4 +1,4 @@
-package br.unicamp.ic.wfscheduler.impl.random;
+package br.unicamp.ic.wfscheduler.impl.roundrobin;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -12,7 +12,7 @@ import br.unicamp.ic.wfscheduler.IScheduler;
 import br.unicamp.ic.wfscheduler.Task;
 import br.unicamp.ic.wfscheduler.util.TaskTopolgicalOrdering;
 
-public class RandomScheduler implements IScheduler
+public class RoundRobinScheduler implements IScheduler
 {
 	private List<Task> tasks;
 	private List<Host> hosts;
@@ -20,16 +20,15 @@ public class RandomScheduler implements IScheduler
 	@Override
 	public void startScheduler(Broker broker)
 	{		
-		Random rnd;
 		TaskTopolgicalOrdering tto;
 		ArrayList<Task> orderedTasks;
 		Hashtable<Task, Host> assignedTasks;
 		ArrayList<Host> trans;
+		int currentHost;
 		
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
-		
-		rnd = new Random();
+				
 		tto = new TaskTopolgicalOrdering(tasks, new Comparator<Task>()
 		{
 			@Override
@@ -46,17 +45,19 @@ public class RandomScheduler implements IScheduler
 		orderedTasks = tto.getSortedTasks();
 		assignedTasks = new Hashtable<Task, Host>(orderedTasks.size());
 		trans = new ArrayList<Host>();
+		currentHost = 0;
 		
 		// for each task
 		while (orderedTasks.size() > 0)
 		{
 			Task t = orderedTasks.get(0);
-			// choose a random host to assign it to the task
-			Host h = hosts.get(rnd.nextInt(hosts.size()));
+			// round-robin host selected
+			Host h = hosts.get(currentHost);
+			currentHost = ( currentHost + 1 ) % hosts.size();			
 			
 			broker.assign(t, h); 
 			assignedTasks.put(t, h);
-							
+
 			// now, we have to transmit the dependencies to this host
 			// as we have topologically ordered the tasks, all dependencies
 			// should be assigned by now

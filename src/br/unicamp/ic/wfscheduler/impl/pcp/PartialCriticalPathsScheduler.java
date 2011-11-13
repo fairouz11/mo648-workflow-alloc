@@ -28,12 +28,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		scheduleWorkflow(tasks, hosts, deadline);
 	}
 
-	@Override
-	public void taskFinished(Task t, Host h) {
-		// TODO Auto-generated method stub
-
-	}
-
 	private long estimateMinimumTransferTime(Task task, List<Host> hosts) {
 		// We are considering uniform bandwidth
 		long mtt;
@@ -288,6 +282,20 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 
 	private void StartAssignmens() {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void taskFinished(Task task, Host host)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void transmissionFinished(Task task, Host sender, Host destionation)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }

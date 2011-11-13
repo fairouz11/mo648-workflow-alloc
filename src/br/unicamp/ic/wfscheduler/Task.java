@@ -6,7 +6,13 @@ import java.util.List;
  * A task to be executed on hosts.
  */
 public interface Task
-{
+{	
+	/**
+	 * Task's unique id.
+	 * @return Task's id
+	 */
+	public int getID();
+	
 	/**
 	 * Instruction count (MI - million instructions)
 	 * @return
@@ -18,6 +24,13 @@ public interface Task
 	 * @return
 	 */
 	public List<Task> getDependencies();
+	
+	/**
+	 * Get information about dependencies.
+	 * @return true if there are dependencies
+	 */
+	public boolean hasDependencies();
+		
 	
 	/**
 	 * Task output size in bytes
