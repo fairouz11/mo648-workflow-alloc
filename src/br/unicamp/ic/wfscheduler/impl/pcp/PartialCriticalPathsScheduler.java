@@ -155,14 +155,16 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		schedulings.put(exit, (long) deadline);
 		constraints = new HashMap<Task, Long>();
 	//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
-		if (ScheduleParents(exit)) {
+		if (ScheduleParents(exit).isSuccessful()) {
 			StartAssignmens();
 		}
 	}
 
-	private boolean ScheduleParents(Task task) {
+	private SchedulleResponse ScheduleParents(Task task) {
 		if (!hasUnscheduledParents(task)) {
-			return true;
+			SchedulleResponse sr = new SchedulleResponse();
+			sr.setSuccessful(true);
+			return sr;
 		}
 		Task taskI = task;
 		ArrayList<Task> criticalPath = new ArrayList<Task>();
@@ -173,19 +175,95 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 		
 		while (!isScheduled(criticalPath)) {
-			if(!SchedulePath(criticalPath)){
-				return false;//Set t failure and SugestedStartTime will be resolved in SchedulePath
+			SchedulleResponse criticalPathSchedule = SchedulePath(criticalPath);
+			if(!criticalPathSchedule.isSuccessful()){
+				return criticalPathSchedule;
 			}
-			
+			for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
+				Task task2 = (Task) iterator.next();
+				SchedulleResponse parentSchedulle = ScheduleParents(task2);
+				if(!parentSchedulle.isSuccessful()){
+					if(criticalPath.contains(parentSchedulle.getFailTask())){
+						constraints.put(parentSchedulle.getFailTask(), parentSchedulle.getSuggestedStartTime());
+						removeAllTheCriticalPathTasksFromTheSchedulligs(criticalPath);
+						break;
+					}else{
+						return parentSchedulle;
+					}
+				}
+			}
 		}
 		return ScheduleParents(task);
 	}
 
 	
 
-	private boolean SchedulePath(ArrayList<Task> criticalPath) {
+
+	private void removeAllTheCriticalPathTasksFromTheSchedulligs(
+			ArrayList<Task> criticalPath) {
+			for (Iterator<Task> iterator = criticalPath.iterator(); iterator
+					.hasNext();) {
+				Task task = (Task) iterator.next();
+				if (schedulings.containsKey(task)){
+					schedulings.remove(task);
+				}
+			}
+	}
+
+	private SchedulleResponse SchedulePath(ArrayList<Task> criticalPath) {
+		SchedulleResponse bestSchedulle = null;
+		int taskIndex = 0;
+		Task t = criticalPath.get(taskIndex);
+		//taskIndex++;
+		while(t != null){
+			int hostIndex = 0;
+			Host s = hosts.get(hostIndex);
+			if(s == null){
+				taskIndex--;
+				t = criticalPath.get(taskIndex);
+			}else{
+				long st = computeST(t,s);
+				long c = computeC(t,s);
+				if(constraints.containsKey(t)){
+					if(st<constraints.get(t));{
+						constraints.put(t,st);
+					}
+				}
+				ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
+				boolean possible = true;
+				boolean finished = true;
+				int i = 0;
+				while(possible&&i<childrenOfT.size()){
+					Task child = childrenOfT.get(i);
+					if (schedulings.containsKey(child)){
+						//if(schedulings.get(child)<) Parei aqui!!
+					}
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		
+		SchedulleResponse sr = new SchedulleResponse();
+		return sr;
+	}
+
+	private ArrayList<Task> lookForAllchildrenOfT(Task t) {
 		// TODO Auto-generated method stub
-		return false;
+		return null;
+	}
+
+	private long computeC(Task t, Host s) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private long computeST(Task t, Host s) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	private boolean isScheduled(ArrayList<Task> criticalPath) {
