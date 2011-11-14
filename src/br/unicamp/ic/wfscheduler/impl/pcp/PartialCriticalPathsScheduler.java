@@ -12,8 +12,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Host> hosts;
 	private long bandwidth;
 
-	private HashMap<Task, Assignment> assignments;
-	private HashMap<Task, Long> schedulings;
+	
+	private HashMap<Task, Assignment> schedulings;
+	private HashMap<Task, Host> hostScheduling;
 	private HashMap<Task, Long> constraints;
 	private HashMap<Task, Long> METs;
 	private HashMap<Task, Long> MTTs;
@@ -62,7 +63,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 			maxEST = ESTs.get(task);
 		} else {
 			Task criticalParent = findCriticalParent(task, hosts);
-			//maxEST = estimateEarliestStartTime(criticalParent, hosts);
 			maxEST = estimateEarliestFinishTime(criticalParent, hosts);
 		}
 		ESTs.put(task, maxEST);
@@ -137,7 +137,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private void scheduleWorkflow(List<Task> task, List<Host> hosts,
 			long deadline) {
 
-		schedulings = new HashMap<Task, Long>();
+		schedulings = new HashMap<Task, Assignment>();
 		METs = new HashMap<Task, Long>();
 		MTTs = new HashMap<Task, Long>();
 		ESTs = new HashMap<Task, Long>();
@@ -145,8 +145,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		Task entry = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
 		Task exit = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
 		tasks = addingTasksEntryAndExit(tasks, entry, exit);
-		schedulings.put(entry, (long) 0);
-		schedulings.put(exit, (long) deadline);
+		schedulings.put(entry, new Assignment(null,(long) 0,(long) 0));
+		schedulings.put(exit, new Assignment(null,(long) deadline,(long) 0));
 		constraints = new HashMap<Task, Long>();
 	//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
 		if (ScheduleParents(exit).isSuccessful()) {
@@ -205,14 +205,31 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private SchedulleResponse SchedulePath(ArrayList<Task> criticalPath) {
-		SchedulleResponse bestSchedulle = null;
+		SchedulleResponse sr = new SchedulleResponse();
+		boolean scheduledFound = false;
+		HashMap<Task, Assignment> bestSchedulle = null;
+		HashMap<Task, Assignment> currentSchedulle = new HashMap<Task, Assignment>();
+		
+		HashMap<Task, Integer> currentHostIndex = new HashMap<Task, Integer>();
+		/*
+		 * O currentHostIndex serve para saber quais os servicos que ja foram tentados para 
+		 * aquela tarefa (next untried service ti)
+		 */
+		for (Iterator<Task> iterator = tasks.iterator(); iterator.hasNext();) {
+			Task task = (Task) iterator.next();
+			currentHostIndex.put(task, 0);
+		}
+		
+		
+		
 		int taskIndex = 0;
 		Task t = criticalPath.get(taskIndex);
-		//taskIndex++;
 		while(t != null){
-			int hostIndex = 0;
-			Host s = hosts.get(hostIndex);
+			Host s = hosts.get(currentHostIndex.get(t));
 			if(s == null){
+				//zera as tentativas, já que vai tentar tudo a partir da tarefa anterior
+				//currentHostIndex.put(t, 0);// Será que tem que zerar mesmo? :P
+				//volta para a tarefa anterior
 				taskIndex--;
 				t = criticalPath.get(taskIndex);
 			}else{
@@ -220,29 +237,76 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				long c = computeC(t,s);
 				if(constraints.containsKey(t)){
 					if(st<constraints.get(t));{
-						constraints.put(t,st);
+						st = constraints.get(t);
 					}
 				}
 				ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
 				boolean possible = true;
-				boolean finished = true;
 				int i = 0;
+				long et = t.getLength() / s.getProcessingSpeed();
 				while(possible&&i<childrenOfT.size()){
 					Task child = childrenOfT.get(i);
-					if (schedulings.containsKey(child)){
-						//if(schedulings.get(child)<) Parei aqui!!
+					if (schedulings.containsKey(child)){						
+						if((st+et+(t.getLength()/bandwidth))>schedulings.get(child).getStartTime()){
+							currentHostIndex.put(t, currentHostIndex.get(t)+1);
+							possible=false;
+							sr.setFailTask(child);
+							sr.setSuggestedStartTime(st+et+(t.getLength()/bandwidth));
+							sr.setSuccessful(false);
+						}
+						i++;
 					}
+				}
+				if(possible){
+					currentSchedulle.put(t,new Assignment(hosts.get(currentHostIndex.get(t)), st, c));
+					if(taskIndex==criticalPath.size()-1){
+						scheduledFound = true;
+						if(bestSchedulle==null){
+							bestSchedulle = (HashMap<Task, Assignment>) currentSchedulle.clone();
+							//será q nao deveria voltar em todo caso? nao apenas se fosse melhor q o best schedulle?
+							taskIndex--;
+							t = criticalPath.get(taskIndex);
+						}else{
+							if(calculaCusto(currentSchedulle)<calculaCusto(bestSchedulle)){
+								bestSchedulle = (HashMap<Task, Assignment>) currentSchedulle.clone();
+								taskIndex--;
+								t = criticalPath.get(taskIndex);
+							}
+						}
+					}else{
+						taskIndex++;
+						t = criticalPath.get(taskIndex);
+					}
+				}else{
+					taskIndex--;
+					t = criticalPath.get(taskIndex);
 				}
 			}
 		}
+		if(scheduledFound){
+			sr = new SchedulleResponse();
+			sr.setSuccessful(true);
+			for (Iterator iterator = criticalPath.iterator(); iterator
+					.hasNext();) {
+				Task task = (Task) iterator.next();
+				schedulings.put(task, bestSchedulle.get(task));
+			}
+			updateChildrenESTs(criticalPath);
+			return sr;
+		}else{
+			return sr;
+		}
 		
+	}
+
+	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
+		// TODO Auto-generated method stub
 		
-		
-		
-		
-		
-		SchedulleResponse sr = new SchedulleResponse();
-		return sr;
+	}
+
+	private long calculaCusto(HashMap<Task, Assignment> currentSchedulle) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	private ArrayList<Task> lookForAllchildrenOfT(Task t) {
