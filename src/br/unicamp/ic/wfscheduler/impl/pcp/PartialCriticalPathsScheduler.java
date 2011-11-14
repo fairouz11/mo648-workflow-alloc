@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import br.unicamp.ic.wfscheduler.*;
 
@@ -14,7 +15,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 
 	
 	private HashMap<Task, Assignment> schedulings;
-	private HashMap<Task, Host> hostScheduling;
 	private HashMap<Task, Long> constraints;
 	private HashMap<Task, Long> METs;
 	private HashMap<Task, Long> MTTs;
@@ -62,39 +62,56 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		if (ESTs.containsKey(task)) {
 			maxEST = ESTs.get(task);
 		} else {
-			Task criticalParent = findCriticalParent(task, hosts);
-			maxEST = estimateEarliestFinishTime(criticalParent, hosts);
+			maxEST = findLaziestParentResponse(task, hosts);
 		}
 		ESTs.put(task, maxEST);
 		return maxEST;
 	}
+	
+	private long updateEarliestStartTime(Task task, List<Host> hosts) {
+		long maxEST = findLaziestParentResponse(task, hosts);
+		ESTs.put(task, maxEST);
+		return maxEST;
+	}
 
-	private Task findCriticalParent(Task task, List<Host> hosts) {
-		long maxEST = 0;
-		Task criticalParent = null;
+	private long estimateEarliestFinishTime(Task task,
+			List<Host> hosts) {
+		long EST = estimateEarliestStartTime(task, hosts);
+		long MET = estimateMinimumExecutionTime(task, hosts);
+		long MTT = estimateMinimumTransferTime(task, hosts);
+		long eft = EST + MET + MTT;
+		return eft;
+	}
+	
+	private long findLaziestParentResponse(Task task, List<Host> hosts) {
+		long maxEFT = 0;
 		for (Iterator<Task> iterator = task.getDependencies().iterator(); iterator
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (!schedulings.containsKey(parent)) {
 				long est = estimateEarliestFinishTime(parent, hosts);
-				if (maxEST < est) {
-					criticalParent = parent;
-					maxEST = est;
+				if (maxEFT < est) {
+					maxEFT = est;
+				}
+			}else{
+				Assignment assignment = schedulings.get(parent);
+				long eft = getFinishTime(parent,assignment);
+				if (maxEFT < eft) {
+					maxEFT = eft;
 				}
 			}
 		}
-		return criticalParent;
-	}
-
-	private long estimateEarliestFinishTime(Task task,
-			List<Host> hosts) {
-		long parentEST = estimateEarliestStartTime(task, hosts);
-		long parentMET = estimateMinimumExecutionTime(task, hosts);
-		long parentMTT = estimateMinimumTransferTime(task, hosts);
-		long eft = parentEST + parentMET + parentMTT;
-		return eft;
+		return maxEFT;
 	}
 	
+	
+
+	private long getFinishTime(Task t, Assignment assignment) {
+		long et = assignment.getStartTime()+(t.getLength()/assignment.getHost().getProcessingSpeed())+(t.getLength()/bandwidth);
+		return et;
+	}
+
+
 	private List<Task> addingTasksEntryAndExit(List<Task> tasks, Task entry,
 			Task exit) {
 
@@ -134,9 +151,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return tasks;
 	}
 
-	private void scheduleWorkflow(List<Task> task, List<Host> hosts,
+	private boolean scheduleWorkflow(List<Task> task, List<Host> hosts,
 			long deadline) {
-
+		
+		boolean sucesso = false;
 		schedulings = new HashMap<Task, Assignment>();
 		METs = new HashMap<Task, Long>();
 		MTTs = new HashMap<Task, Long>();
@@ -150,8 +168,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		constraints = new HashMap<Task, Long>();
 	//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
 		if (ScheduleParents(exit).isSuccessful()) {
-			StartAssignmens();
+			sucesso = true;
 		}
+		return sucesso;
 	}
 
 	private SchedulleResponse ScheduleParents(Task task) {
@@ -190,7 +209,22 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return ScheduleParents(task);
 	}
 
-	
+	private Task findCriticalParent(Task task, List<Host> hosts) {
+		long maxEST = 0;
+		Task criticalParent = null;
+		for (Iterator<Task> iterator = task.getDependencies().iterator(); iterator
+				.hasNext();) {
+			Task parent = (Task) iterator.next();
+			if (!schedulings.containsKey(parent)) {
+				long est = estimateEarliestFinishTime(parent, hosts);
+				if (maxEST < est) {
+					criticalParent = parent;
+					maxEST = est;
+				}
+			}
+		}
+		return criticalParent;
+	}
 
 
 	private void removeAllTheCriticalPathTasksFromTheSchedulligs(
@@ -300,22 +334,42 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
-		// TODO Auto-generated method stub
-		
+		for (Iterator iterator = criticalPath.iterator(); iterator.hasNext();) {
+			Task task = (Task) iterator.next();
+			//long ft = getFinishTime(task, schedulings.get(task));
+			ArrayList<Task> children = lookForAllchildrenOfT(task);
+			for (Iterator iterator2 = children.iterator(); iterator2.hasNext();) {
+				Task child = (Task) iterator2.next();
+				if(!schedulings.containsKey(child)){
+					updateEarliestStartTime(child, hosts);
+				}
+			}
+		}		
 	}
 
 	private long calculaCusto(HashMap<Task, Assignment> currentSchedulle) {
-		// TODO Auto-generated method stub
-		return 0;
+		Set<Task> TodasAsTasks = currentSchedulle.keySet();
+		long cost = 0;
+		for (Task task : TodasAsTasks) {
+			cost = cost+currentSchedulle.get(task).getCost();
+		}
+		return cost;
 	}
 
 	private ArrayList<Task> lookForAllchildrenOfT(Task t) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Task> children = new ArrayList<Task>();
+		for (Iterator<Task> iterator = tasks.iterator(); iterator.hasNext();) {
+			Task task = (Task) iterator.next();
+			if(task.getDependencies().contains(t)){
+				children.add(task);
+			}
+		}
+		return children;
 	}
 
 	private long computeC(Task t, Host s) {
 		// TODO Auto-generated method stub
+		
 		return 0;
 	}
 
@@ -344,15 +398,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return hasUnscheduledParents;
 	}
 
-	private void StartAssignmens() {
-		// TODO Auto-generated method stub
-	}
-
 	@Override
 	public void taskFinished(Task task, Host host)
 	{
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub	
 	}
 
 	@Override
