@@ -12,6 +12,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
 	private List<Host> hosts;
 	private long bandwidth;
+	private long transmissionCost;
 
 	
 	private HashMap<Task, Assignment> schedulings;
@@ -19,7 +20,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private HashMap<Task, Long> METs;
 	private HashMap<Task, Long> MTTs;
 	private HashMap<Task, Long> ESTs;
-
+	private HashMap<Host, ArrayList<TimeSlot>> timeSlots;
+	
+	
 	@Override
 	public void startScheduler(Broker broker) {
 		tasks = broker.getTasks();
@@ -28,7 +31,29 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		long deadline = 999999998;
 		scheduleWorkflow(tasks, hosts, deadline);
 	}
+	
+	@Override
+	public void taskFinished(Task task, Host host)
+	{
+		// TODO Auto-generated method stub	
+	}
 
+	@Override
+	public void transmissionFinished(Task task, Host sender, Host destionation)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void initializeTimeSlots(){
+		for (Iterator<Host> iterator = hosts.iterator(); iterator.hasNext();) {
+			Host h = (Host) iterator.next();
+			ArrayList<TimeSlot> slots = new ArrayList<TimeSlot>();
+			slots.add(new TimeSlot());
+			timeSlots.put(h, slots);
+		}
+	}
+	
 	private long estimateMinimumTransferTime(Task task, List<Host> hosts) {
 		// We are considering uniform bandwidth
 		long mtt;
@@ -166,7 +191,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		schedulings.put(entry, new Assignment(null,(long) 0,(long) 0));
 		schedulings.put(exit, new Assignment(null,(long) deadline,(long) 0));
 		constraints = new HashMap<Task, Long>();
-	//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
+		//	estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
+		initializeTimeSlots();
 		if (ScheduleParents(exit).isSuccessful()) {
 			sucesso = true;
 		}
@@ -320,7 +346,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		if(scheduledFound){
 			sr = new SchedulleResponse();
 			sr.setSuccessful(true);
-			for (Iterator iterator = criticalPath.iterator(); iterator
+			for (Iterator<Task> iterator = criticalPath.iterator(); iterator
 					.hasNext();) {
 				Task task = (Task) iterator.next();
 				schedulings.put(task, bestSchedulle.get(task));
@@ -334,11 +360,11 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
-		for (Iterator iterator = criticalPath.iterator(); iterator.hasNext();) {
+		for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
 			//long ft = getFinishTime(task, schedulings.get(task));
 			ArrayList<Task> children = lookForAllchildrenOfT(task);
-			for (Iterator iterator2 = children.iterator(); iterator2.hasNext();) {
+			for (Iterator<Task> iterator2 = children.iterator(); iterator2.hasNext();) {
 				Task child = (Task) iterator2.next();
 				if(!schedulings.containsKey(child)){
 					updateEarliestStartTime(child, hosts);
@@ -368,14 +394,78 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private long computeC(Task t, Host s) {
-		// TODO Auto-generated method stub
+		long exCost = (long) (t.getLength()*s.getCost());
+		long parentsTransferCost = 0;
+		long childTransferCost = 0;
 		
-		return 0;
+		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator.hasNext();) {
+			Task parent = (Task) iterator.next();
+			if(schedulings.containsKey(parent)){
+				parentsTransferCost += parent.getLength()*transmissionCost;
+			}
+		}
+		ArrayList<Task> children = lookForAllchildrenOfT(t);
+		for (Iterator<Task> iterator = children.iterator(); iterator.hasNext();) {
+			Task child = (Task) iterator.next();
+			if(schedulings.containsKey(child)){
+				childTransferCost+= t.getLength()*transmissionCost;
+			}
+		}
+		
+		return exCost+parentsTransferCost+childTransferCost;
 	}
 
 	private long computeST(Task t, Host s) {
-		// TODO Auto-generated method stub
-		return 0;
+		boolean found = false;
+		long minST = estimateStartTime(t,s);
+		long et = t.getLength()/s.getProcessingSpeed();
+		ArrayList<TimeSlot> slots = timeSlots.get(s);
+		int i = 0;
+		while(!found && i<slots.size()){
+			TimeSlot slot = slots.get(i);
+			if(slot.getStartTime()<=minST){
+				if(slot.getFinishTime()==-1||slot.getFinishTime()>=minST+et){
+					found = true;
+					TimeSlot antes = new TimeSlot(slot.getStartTime(),minST);
+					TimeSlot depois = new TimeSlot(minST+et,slot.getFinishTime());
+					slots.remove(i);
+					if(depois.getFinishTime()-depois.getStartTime()!=0){
+						slots.add(depois);
+					}
+					if(antes.getFinishTime()-antes.getStartTime()!=0){
+						slots.add(antes);
+					}
+				}
+			}else{
+				if(slot.getFinishTime()==-1||slot.getFinishTime()-slot.getStartTime()>=et){
+					found = true;
+					TimeSlot depois = new TimeSlot(slot.getStartTime()+et,slot.getFinishTime());
+					slots.remove(i);
+					if(depois.getFinishTime()-depois.getStartTime()!=0){
+						slots.add(depois);
+					}
+					minST = slot.getStartTime();
+				}
+			}
+		}
+		return minST;
+	}
+
+	private long estimateStartTime(Task t, Host s) {
+		long maxEFT = 0;
+		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator
+				.hasNext();) {
+			Task parent = (Task) iterator.next();
+			if (schedulings.containsKey(parent)) {
+				Assignment assignment = schedulings.get(parent);
+				long eft = getFinishTime(parent,assignment);
+				if (maxEFT < eft) {
+					maxEFT = eft;
+				}
+			}
+		}
+		return maxEFT;
+		
 	}
 
 	private boolean isScheduled(ArrayList<Task> criticalPath) {
@@ -398,17 +488,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return hasUnscheduledParents;
 	}
 
-	@Override
-	public void taskFinished(Task task, Host host)
-	{
-		// TODO Auto-generated method stub	
-	}
 
-	@Override
-	public void transmissionFinished(Task task, Host sender, Host destionation)
-	{
-		// TODO Auto-generated method stub
-		
-	}
 
 }
