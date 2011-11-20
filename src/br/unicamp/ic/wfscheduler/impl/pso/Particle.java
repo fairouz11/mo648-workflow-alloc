@@ -11,34 +11,23 @@ package br.unicamp.ic.wfscheduler.impl.pso;
 
 public class Particle
 {
-	private Position location;
+	private Position position;
 	private Velocity velocity;
-	private double fitness;
 	
-	public Particle(int dimension){
-		this.fitness = 0;
-		this.location = new Position(dimension);
+	public Particle(int dimension)
+	{
+		this.position = new Position(dimension);
 		this.velocity = new Velocity(dimension);
 	}	
 	
-	public double getFitness()
+	public Position getPosition()
 	{
-		return fitness;
+		return position;
 	}
 	
-	public void setFitness(double fitness)
+	public void setPosition(Position position)
 	{
-		this.fitness = fitness;
-	}
-	
-	public Position getLocation()
-	{
-		return location;
-	}
-	
-	public void setLocation(Position location)
-	{
-		this.location = location;
+		this.position = position;
 	}
 	
 	public Velocity getVelocity()
