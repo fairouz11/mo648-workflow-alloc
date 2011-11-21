@@ -17,14 +17,21 @@ public class PSOScheduler implements IScheduler
 	/**
 	 * Attributes
 	 */
-	private static final int SWARM_SIZE = 25;
-	private static final int MAX_ITERATION = 45;
+	// total number of particles in the swarm
+	private static final int SWARM_SIZE = 50;
 	
-	private static final double COST_COMMUNICATION = 0.17;
+	// number of iterations of the PSO
+	private static final int MAX_ITERATION = 70;
+	
+	// inertia value
+	private static final double inertia = 0.75;
+	
+	// cost of communication between resources
+	private static final double COST_COMMUNICATION = 0.0;
 	
 	// acceleration coefficients
-	private static final double C1 = 2.0;
-	private static final double C2 = 2.0;
+	private static final double C1 = 1.5;
+	private static final double C2 = 0.5;
 	
 	private List<Task> tasks;
 	private List<Host> hosts;
@@ -114,7 +121,7 @@ public class PSOScheduler implements IScheduler
 					H_cost.put(h2, 0.0);
 				}
 				else{
-					H_cost.put(h2, COST_COMMUNICATION);//depois ver como modificar esse valor
+					H_cost.put(h2, COST_COMMUNICATION);
 				}	
 			}
 			HH_matrix.put(h, H_cost);
@@ -201,7 +208,11 @@ public class PSOScheduler implements IScheduler
 			if(number_dependencies.get(t_unscheduled.getID()) == t_unscheduled.getDependencies().size()){
 				readyTasks.add(t_unscheduled);
 			}
+			else{
+				number_dependencies.set(t_unscheduled.getID(), 0);
+			}
 		}
+		
 	}
 	
 	private void Scheduling_Heuristic(Broker broker)
@@ -283,7 +294,6 @@ public class PSOScheduler implements IScheduler
 			 * Step 4: Update pbest. If the fitness value is better than the previous 
 			 * best pbest, set the current fitness value as the new pbest
 			 */
-			
 			if(iteration == 0)
 			{
 				for(int i=0; i<SWARM_SIZE; i++)
@@ -320,8 +330,6 @@ public class PSOScheduler implements IScheduler
 			/*
 			 * Step 6: For all particles, calculate velocity and update their positions
 			 */
-			double inertia = 0.75;
-			
 			for(int w=0; w<SWARM_SIZE; w++)
 			{
 				//Generates random numbers greater than or equal 0 and less than 1
@@ -504,13 +512,15 @@ public class PSOScheduler implements IScheduler
 	 */
 	public void taskFinished(Task t, Host h)
 	{
-		finishedTasks.add(t);
+		return;
 	}
 
 
 	@Override
 	public void transmissionFinished(Task task, Host sender, Host destionation)
 	{
+		finishedTasks.add(task);
+		
 		calc_dependencies();
 		
 		if(readyTasks.size() > 0){
