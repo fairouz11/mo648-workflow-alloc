@@ -52,11 +52,12 @@ public class PSOScheduler implements IScheduler
 	//Variable that saves the position of the best particle in the swarm
 	private Position gBestLoc;
 	
-	
+	private Broker broker;
 	private Hashtable<Task,Host> assignedTasks;
 	private List<Task> finishedTasks;
-	private boolean task_finished;
 	private ArrayList<Task> unscheduledTasks;
+	private ArrayList<Task> readyTasks;
+	private ArrayList<Integer> number_dependencies;
 	
 	/**
 	 * Constructor
@@ -68,10 +69,11 @@ public class PSOScheduler implements IScheduler
 		pbest = new ArrayList<Double>();
 		pBestLoc = new ArrayList<Position>();
 		gBestLoc = new Position();
+		gbest = 0.0;
+		
 		assignedTasks = new Hashtable<Task,Host>();
 		finishedTasks = new ArrayList<Task>();
-		gbest = 0.0;
-		task_finished = false;
+		unscheduledTasks = new ArrayList<Task>();
 	}
 	
 	public void startScheduler(Broker broker)
@@ -79,6 +81,8 @@ public class PSOScheduler implements IScheduler
 		//Getting a list of tasks and hosts
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
+		
+		this.broker = broker;
 		
 		Scheduling_Heuristic(broker);
 	}
@@ -138,6 +142,68 @@ public class PSOScheduler implements IScheduler
 		}
 	}
 	
+	/**
+	 * assign() function: assign the mapped tasks to the respective hosts
+	 * and dispatch them to execution.
+	 */
+	private void assign()
+	{	
+		ArrayList<Host> trans = new ArrayList<Host>();
+		
+		for(Task t : readyTasks)
+		{
+			Host host = null;
+			for(Host h : hosts){
+				if(h.getID() == gBestLoc.getPosition().get(t)){
+					host = h;
+					break;
+				}
+			}
+			
+			broker.assign(t, host); 
+			assignedTasks.put(t, host);
+			
+			// now, we have to transmit the dependencies to this host
+			// all dependencies should be assigned by now
+			trans.add(host);
+			
+			for (Task dep : t.getDependencies())
+				broker.transmitResult(dep, trans);
+
+			trans.clear();
+					
+			unscheduledTasks.remove(unscheduledTasks.indexOf(t));
+		}
+		
+		readyTasks.clear();
+	}
+	
+	/**
+	 * calc_dependencies() function: updates the readyTasks list. A ready task is a task
+	 * whose parents have completed execution and have provided the files necessary
+	 * for the task's execution.
+	 */
+	private void calc_dependencies()
+	{
+		for(Task t_unscheduled : unscheduledTasks)
+		{	
+			for (Task t_dependencia : t_unscheduled.getDependencies())
+			{
+				for(Task t_finished : finishedTasks)
+				{
+					if(t_finished.getID() == t_dependencia.getID())
+					{
+						number_dependencies.set(t_unscheduled.getID(), number_dependencies.get(t_unscheduled.getID())+1);
+					}
+				}
+			}
+			
+			if(number_dependencies.get(t_unscheduled.getID()) == t_unscheduled.getDependencies().size()){
+				readyTasks.add(t_unscheduled);
+			}
+		}
+	}
+	
 	private void Scheduling_Heuristic(Broker broker)
 	{
 		//Step 1: Calculate average computation cost of all tasks in all compute resources
@@ -152,11 +218,27 @@ public class PSOScheduler implements IScheduler
 		//Step 4: Set edge weight e(k1,k2) as size of file transferred between tasks
 		calculate_edge_weight();
 		
+		/**
+		 * Step 5: Compute PSO({ a set of all tasks })
+		 */
 		
-		//Step 5: Compute PSO({ a set of all tasks })
-		ArrayList<Task> readyTasks = new ArrayList<Task>(tasks);
+		//Initialize the readyTasks vector with the list of all tasks
+		readyTasks = new ArrayList<Task>(tasks);
 		
+		//Initialize the unscheduledTasks vector with the list of all tasks
+		unscheduledTasks = new ArrayList<Task>(tasks);
+		
+		//Initializes a counter vector to manage the number of dependencies finished
+		//and initializes all its values with 0
+		number_dependencies = new ArrayList<Integer>(tasks.size());
+		for(int w=0; w<tasks.size(); w++)
+		{
+			number_dependencies.add(w, 0);
+		}
+		
+		//Call PSO
 		PSO_Algorithm(readyTasks);
+		
 		
 		//Create a list with the readyTasks
 		ArrayList<Task> aux = new ArrayList<Task>();
@@ -168,84 +250,7 @@ public class PSOScheduler implements IScheduler
 		readyTasks.clear();
 		readyTasks.addAll(aux);
 		
-		
-		//Step 6: Repeat a code block until there are unscheduled tasks
-		unscheduledTasks = new ArrayList<Task>(tasks);
-		ArrayList<Host> trans = new ArrayList<Host>();
-		
-		do{
-			
-			//Step 10: Dispatch all the mapped tasks
-			for(Task t : readyTasks){
-				Host host = null;
-				for(Host h : hosts){
-					if(h.getID() == gBestLoc.getPosition().get(t)){
-						host = h;
-						break;
-					}
-				}
-				
-				broker.assign(t, host); 
-				assignedTasks.put(t, host);
-				
-				// now, we have to transmit the dependencies to this host
-				// all dependencies should be assigned by now
-				trans.add(host);
-				
-				for (Task dep : t.getDependencies())
-					broker.transmitResult(dep, trans);
-
-				trans.clear();
-						
-				unscheduledTasks.remove(unscheduledTasks.indexOf(t));
-			}
-			
-			readyTasks.clear();
-			
-			
-			
-			//Step 11: wait for polling_time
-			do{ } while( task_finished == false );
-			
-			
-			
-			task_finished = false;
-			boolean flag = true;
-			//Step 12: Update readyTask list
-			do{
-				
-				for(Task t_unscheduled : unscheduledTasks)
-				{
-					int count = 0;
-					for (Task t_dependencia : t_unscheduled.getDependencies())
-					{
-						for(Task t_finished : finishedTasks)
-						{
-							if(t_finished.getID() == t_dependencia.getID())
-							{
-								count++;
-							}
-						}
-					}
-					if(count == t_unscheduled.getDependencies().size())
-					{
-						readyTasks.add(t_unscheduled);
-						flag = false;
-					}
-				}
-				
-			} while(flag && (unscheduledTasks.size() > 0));
-			
-			
-			//Step 13: Update average cost of communication between resources
-			//according to the current network load.
-			
-			//Step 14: Compute PSO
-			if(readyTasks.size() > 0)
-				PSO_Algorithm(readyTasks);
-			
-			
-		}while(unscheduledTasks.size() > 0);
+		assign();
 		
 	}
 	
@@ -506,7 +511,11 @@ public class PSOScheduler implements IScheduler
 	@Override
 	public void transmissionFinished(Task task, Host sender, Host destionation)
 	{
-		//finishedTasks.add(task);
-		task_finished = true;
+		calc_dependencies();
+		
+		if(readyTasks.size() > 0){
+			PSO_Algorithm(readyTasks);
+			assign();
+		}
 	}
 }
