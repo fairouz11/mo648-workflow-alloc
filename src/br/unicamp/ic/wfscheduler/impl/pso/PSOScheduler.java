@@ -21,7 +21,7 @@ public class PSOScheduler implements IScheduler
 	private static final int SWARM_SIZE = 50;
 	
 	// number of iterations of the PSO
-	private static final int MAX_ITERATION = 70;
+	private static final int MAX_ITERATION = 100;
 	
 	// inertia value
 	private static final double inertia = 0.75;
@@ -30,8 +30,8 @@ public class PSOScheduler implements IScheduler
 	private static final double COST_COMMUNICATION = 0.0;
 	
 	// acceleration coefficients
-	private static final double C1 = 1.5;
-	private static final double C2 = 0.5;
+	private static final double C1 = 0.5;
+	private static final double C2 = 1.5;
 	
 	private List<Task> tasks;
 	private List<Host> hosts;
@@ -126,7 +126,6 @@ public class PSOScheduler implements IScheduler
 			}
 			HH_matrix.put(h, H_cost);
 		}
-		
 	}
 	
 	private void calculate_edge_weight()
@@ -354,9 +353,9 @@ public class PSOScheduler implements IScheduler
 					
 					int finalValue=0;
 					finalValue = Math.abs(previous_position.getIndexValue(readyTasks.get(i)) + (int)Math.floor(value));
-					finalValue = finalValue % particleDimension;
+					finalValue = finalValue % (hosts.size());
 					
-					swarm.get(w).getPosition().setPosition(readyTasks.get(i), (int)finalValue);
+					swarm.get(w).getPosition().setPosition(readyTasks.get(i), finalValue);
 				}
 			}
 			
@@ -417,12 +416,14 @@ public class PSOScheduler implements IScheduler
 	{
 		Host host1 = null;
 		Host host2 = null;
-			
+		
 		for(Host h : hosts){
-			if(h.getID() == (p.getPosition().getIndexValue(t1)))
+			if(h.getID() == p.getPosition().getIndexValue(t1)){
 				host1 = h;
-			if(h.getID() == (p.getPosition().getIndexValue(t2)))
+			}
+			if(h.getID() == p.getPosition().getIndexValue(t2)){
 				host2 = h;
+			}
 		}
 		
 		return HH_matrix.get(host1).get(host2);
