@@ -6,7 +6,7 @@
  * best position and the position of the best particle in the problem space.
  * Each dimension of the particle has its own position value.
  */
-package br.unicamp.ic.wfscheduler.impl.pso;
+package br.unicamp.ic.wfscheduler.impl.static_pso;
 
 import java.util.Hashtable;
 

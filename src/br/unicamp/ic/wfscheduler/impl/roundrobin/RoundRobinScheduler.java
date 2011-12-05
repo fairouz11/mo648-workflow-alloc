@@ -1,4 +1,4 @@
-package br.unicamp.ic.wfscheduler.roundrobin;
+package br.unicamp.ic.wfscheduler.impl.roundrobin;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,6 +77,13 @@ public class RoundRobinScheduler implements IScheduler
 	public void taskFinished(Task t, Host h)
 	{
 		return;
+	}
+
+	@Override
+	public void transmissionFinished(Task task, Host sender, Host destionation)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }

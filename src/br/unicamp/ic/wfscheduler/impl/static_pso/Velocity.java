@@ -6,7 +6,7 @@
  * iteration of the algorithm. The movement of a particle is coordinated by its velocity.
  * Each dimension of a particle has its own velocity value.
  */
-package br.unicamp.ic.wfscheduler.impl.pso;
+package br.unicamp.ic.wfscheduler.impl.static_pso;
 
 import java.util.Hashtable;
 

@@ -7,7 +7,10 @@
  * because of 5 tasks and the content of each dimension of the particles will be the
  * compute resource (host number) assigned to that task.
  */
-package br.unicamp.ic.wfscheduler.impl.pso;
+package br.unicamp.ic.wfscheduler.impl.static_pso;
+
+import br.unicamp.ic.wfscheduler.impl.static_pso.Position;
+import br.unicamp.ic.wfscheduler.impl.static_pso.Velocity;
 
 public class Particle
 {

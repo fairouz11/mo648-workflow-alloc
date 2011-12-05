@@ -78,4 +78,11 @@ public class RandomScheduler implements IScheduler
 		return;
 	}
 
+	@Override
+	public void transmissionFinished(Task task, Host sender, Host destionation)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 }

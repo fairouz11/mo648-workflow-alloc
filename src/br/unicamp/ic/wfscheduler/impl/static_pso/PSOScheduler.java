@@ -1,7 +1,7 @@
 /**
  * Particle Swarm Optimization Scheduler Main Class
  */
-package br.unicamp.ic.wfscheduler.impl.pso;
+package br.unicamp.ic.wfscheduler.impl.static_pso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,21 +17,16 @@ public class PSOScheduler implements IScheduler
 	/**
 	 * Attributes
 	 */
-	// total number of particles in the swarm
-	private static final int SWARM_SIZE = 50;
+	private static final int SWARM_SIZE = 40;
+	private static final int MAX_ITERATION = 70;
 	
-	// number of iterations of the PSO
-	private static final int MAX_ITERATION = 100;
-	
-	// inertia value
-	private static final double inertia = 0.75;
-	
-	// cost of communication between resources
 	private static final double COST_COMMUNICATION = 0.0;
 	
+	private static final double inertia = 0.75;
+	
 	// acceleration coefficients
-	private static final double C1 = 0.5;
-	private static final double C2 = 1.5;
+	private static final double C1 = 1.5;
+	private static final double C2 = 0.7;
 	
 	private List<Task> tasks;
 	private List<Host> hosts;
@@ -61,7 +56,6 @@ public class PSOScheduler implements IScheduler
 	
 	private Broker broker;
 	private Hashtable<Task,Host> assignedTasks;
-	private List<Task> finishedTasks;
 	private ArrayList<Task> unscheduledTasks;
 	private ArrayList<Task> readyTasks;
 	private ArrayList<Integer> number_dependencies;
@@ -79,7 +73,6 @@ public class PSOScheduler implements IScheduler
 		gbest = 0.0;
 		
 		assignedTasks = new Hashtable<Task,Host>();
-		finishedTasks = new ArrayList<Task>();
 		unscheduledTasks = new ArrayList<Task>();
 	}
 	
@@ -126,6 +119,7 @@ public class PSOScheduler implements IScheduler
 			}
 			HH_matrix.put(h, H_cost);
 		}
+		
 	}
 	
 	private void calculate_edge_weight()
@@ -184,36 +178,7 @@ public class PSOScheduler implements IScheduler
 		readyTasks.clear();
 	}
 	
-	/**
-	 * calc_dependencies() function: updates the readyTasks list. A ready task is a task
-	 * whose parents have completed execution and have provided the files necessary
-	 * for the task's execution.
-	 */
-	private void calc_dependencies()
-	{
-		for(Task t_unscheduled : unscheduledTasks)
-		{	
-			for (Task t_dependencia : t_unscheduled.getDependencies())
-			{
-				for(Task t_finished : finishedTasks)
-				{
-					if(t_finished.getID() == t_dependencia.getID())
-					{
-						number_dependencies.set(t_unscheduled.getID(), number_dependencies.get(t_unscheduled.getID())+1);
-					}
-				}
-			}
-			
-			if(number_dependencies.get(t_unscheduled.getID()) == t_unscheduled.getDependencies().size()){
-				readyTasks.add(t_unscheduled);
-			}
-			else{
-				number_dependencies.set(t_unscheduled.getID(), 0);
-			}
-		}
-		
-	}
-	
+
 	private void Scheduling_Heuristic(Broker broker)
 	{
 		//Step 1: Calculate average computation cost of all tasks in all compute resources
@@ -249,19 +214,7 @@ public class PSOScheduler implements IScheduler
 		//Call PSO
 		PSO_Algorithm(readyTasks);
 		
-		
-		//Create a list with the readyTasks
-		ArrayList<Task> aux = new ArrayList<Task>();
-		for(Task t : readyTasks){
-			if(!t.hasDependencies()){
-				aux.add(t);
-			}	
-		}
-		readyTasks.clear();
-		readyTasks.addAll(aux);
-		
 		assign();
-		
 	}
 	
 	/**
@@ -293,6 +246,7 @@ public class PSOScheduler implements IScheduler
 			 * Step 4: Update pbest. If the fitness value is better than the previous 
 			 * best pbest, set the current fitness value as the new pbest
 			 */
+			
 			if(iteration == 0)
 			{
 				for(int i=0; i<SWARM_SIZE; i++)
@@ -353,9 +307,9 @@ public class PSOScheduler implements IScheduler
 					
 					int finalValue=0;
 					finalValue = Math.abs(previous_position.getIndexValue(readyTasks.get(i)) + (int)Math.floor(value));
-					finalValue = finalValue % (hosts.size());
+					finalValue = finalValue % particleDimension;
 					
-					swarm.get(w).getPosition().setPosition(readyTasks.get(i), finalValue);
+					swarm.get(w).getPosition().setPosition(readyTasks.get(i), (int)finalValue);
 				}
 			}
 			
@@ -416,14 +370,12 @@ public class PSOScheduler implements IScheduler
 	{
 		Host host1 = null;
 		Host host2 = null;
-		
+			
 		for(Host h : hosts){
-			if(h.getID() == p.getPosition().getIndexValue(t1)){
+			if(h.getID() == (p.getPosition().getIndexValue(t1)))
 				host1 = h;
-			}
-			if(h.getID() == p.getPosition().getIndexValue(t2)){
+			if(h.getID() == (p.getPosition().getIndexValue(t2)))
 				host2 = h;
-			}
 		}
 		
 		return HH_matrix.get(host1).get(host2);
@@ -520,13 +472,6 @@ public class PSOScheduler implements IScheduler
 	@Override
 	public void transmissionFinished(Task task, Host sender, Host destionation)
 	{
-		finishedTasks.add(task);
-		
-		calc_dependencies();
-		
-		if(readyTasks.size() > 0){
-			PSO_Algorithm(readyTasks);
-			assign();
-		}
+		return;
 	}
 }

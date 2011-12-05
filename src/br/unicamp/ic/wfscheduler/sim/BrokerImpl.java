@@ -5,6 +5,8 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.jws.Oneway;
+
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Storage;
@@ -23,11 +25,19 @@ class BrokerImpl implements Broker
 	private static final int costPerStorage = 0;
 	private static final int costPerBw = 0;
 	
+	/**
+	 * true when simulation has started
+	 */
+	private boolean simulationOnline;
+	
+	private boolean newTask;
+	private boolean newTransmission;
+	
 	private long bandwidth;
 	private double processingCost;
 	private Datacenter datacenter;
 	private DatacenterCharacteristics caracteristics;
-	private DatacenterBroker dcBroker;
+	private DatacenterBroker dcBroker;	
 	
 	private ArrayList<HostImpl> hosts;
 	private ArrayList<TaskImpl> tasks;
@@ -48,6 +58,8 @@ class BrokerImpl implements Broker
 		ArrayList<org.cloudbus.cloudsim.Host> hostList = new ArrayList<org.cloudbus.cloudsim.Host>(hosts.size());
 		ArrayList<Vm> vmList = new ArrayList<Vm>(hosts.size());
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>(tasks.size());
+		
+		this.simulationOnline = false;
 		
 		this.hostMapping = new Hashtable<org.cloudbus.cloudsim.Host, HostImpl>(hosts.size());
 		this.cloudletMapping = new Hashtable<Cloudlet, TaskImpl>(tasks.size());
@@ -105,6 +117,7 @@ class BrokerImpl implements Broker
 	{
 		scheduler.startScheduler(this);
 		
+		simulationOnline = true;
 		CloudSim.startSimulation();
 		
 		CloudSim.stopSimulation();
@@ -233,18 +246,42 @@ class BrokerImpl implements Broker
 		return hosts;
 	}
 	
+	private void handleOnlineSchedulling()
+	{
+		if (!simulationOnline) 
+			return;
+	
+		// checks if scheduler did anything that needs to be simulated
+		if (newTransmission || newTask)
+		{
+			// checks if we can stop now
+			dcBroker.checkStopCriteria();
+		}
+	}
+		
 	void taskFinished(Cloudlet cloudlet)
 	{
+		newTask = newTransmission = false;
+		
 		Task t = getTask(cloudlet);
 		Host h = allocation.get(t);
 		
 		scheduler.taskFinished(t, h);
+		
+		handleOnlineSchedulling();
 	}
 	
 	void transmissionFinished(Task taskSent, HostImpl dest)
 	{
+		newTask = newTransmission = false;
+		
+		// tells real broker that a transmission has finished
+		dcBroker.transmissionFinished();
+		
 		Host sender = allocation.get(taskSent);
 		scheduler.transmissionFinished(taskSent, sender, dest);
+		
+		handleOnlineSchedulling();
 	}
 	
 	public double getClock()
@@ -308,6 +345,8 @@ class BrokerImpl implements Broker
 		
 		dcBroker.bindCloudletToVm(ti.getCsCloudlet().getCloudletId(),
 				hi.getCsVm().getId());
+		
+		newTask = true;
 	}
 
 	@Override
@@ -341,8 +380,16 @@ class BrokerImpl implements Broker
 				// add it
 				hl.add(dh);
 				responsibleHost.transmit(ti, dh);
+				dcBroker.addPendingTransmission();
 			}
 		}
+		
+		newTransmission = destination.size() > 0;
+		
+		// if there's a new transmission and we are online, we need to
+		// tell the host to transmit
+		if (newTransmission && simulationOnline)
+			responsibleHost.updateTransmissionAndYell();
 	}
 
 }
