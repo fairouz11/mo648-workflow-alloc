@@ -19,7 +19,7 @@ import br.unicamp.ic.wfscheduler.Host;
 import br.unicamp.ic.wfscheduler.IScheduler;
 import br.unicamp.ic.wfscheduler.Task;
 
-class BrokerImpl implements Broker
+public class BrokerImpl implements Broker
 {	
 	private static final int costPerMem = 0;
 	private static final int costPerStorage = 0;

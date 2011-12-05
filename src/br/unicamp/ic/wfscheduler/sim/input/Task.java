@@ -19,6 +19,11 @@ public class Task
 		return outputSize;
 	}
 	
+	public void setOutputSize(long value)
+	{
+		outputSize = value;
+	}
+	
 	public List<Task> getDependencies()
 	{
 		return dependencies;
