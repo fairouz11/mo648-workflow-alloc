@@ -47,7 +47,7 @@ class TaskImpl implements Task
 	 */
 	double calculateProcessingCost(HostImpl h)
 	{
-		return cloudlet.getActualCPUTime() * h.getCost();
+		return this.getLength() * h.getCost();
 	}
 	
 	/**
