@@ -26,6 +26,12 @@ public interface Broker
 	public List<Host> getHosts();
 	
 	/**
+	 * Get deadline
+	 * @return deadline in seconds
+	 */	
+	public double getDeadline();
+	
+	/**
 	 * Get current clock time.
 	 * @return current clock.
 	 */

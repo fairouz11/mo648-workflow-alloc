@@ -31,8 +31,10 @@ public class Main
 		IScheduler scheduler;
 		String schedulerName;
 		
-		if (args.length != 4)
+		if (args.length != 5)
 		{
+			System.err.print("Invalid arg number: expected 5 found ");
+			System.err.println(args.length);
 			printHelp();
 			System.exit(-1);
 		}
@@ -74,7 +76,7 @@ public class Main
 	
 	private static void printHelp()
 	{
-		System.err.println("./wfscheduler hostfile taskfile outputfile scheduler_name");
+		System.err.println("./wfscheduler hostfile taskfile outputfile scheduler_name deadline");
 		System.err.println("Possible scheduler names are: random, roundrobim, pso, pcp");
 	}
 	
@@ -139,28 +141,37 @@ public class Main
 	private static BrokerImpl prepare(String[] args, IScheduler scheduler) throws Exception
 	{
 		long bandwidth;
-		double processingCost;
 		String hostFile;
 		String buf;
 		ArrayList<Host> hosts;
+		double deadline;
 		
 		CloudSim.init(1, Calendar.getInstance(), false);
 		
-		hostFile = args[0];
+		hostFile = args[0];		
 		
 		try
 		{
+			deadline = Double.parseDouble(args[4]);
+		}
+		catch(Exception e)
+		{
+			System.err.println("Invalid deadline");
+			deadline = 0;
+			System.exit(-1);
+		}
+		
+		try
+		{					
 			File f = new File(hostFile);
 			Scanner reader = new Scanner(f);
 			
 			// file format
 			// bandwidth
-			// computation cost
 			
-			// numer_of_cores mips
+			// numer_of_cores mips cost
 			
 			bandwidth = Integer.parseInt(reader.nextLine());
-			processingCost = Double.parseDouble(reader.nextLine());
 			
 			hosts = new ArrayList<Host>();
 			
@@ -168,7 +179,9 @@ public class Main
 			{
 				int proc = reader.nextInt();
 				long mips = reader.nextLong();
-				hosts.add(new Host(mips, proc));
+				double cost = reader.nextDouble();
+				
+				hosts.add(new Host(mips, proc, cost));
 			}
 			
 			reader.close();
@@ -179,10 +192,9 @@ public class Main
 			System.exit(-1);
 			
 			hosts = null;
-			bandwidth = 0;
-			processingCost = 0;			
+			bandwidth = 0;		
 		}		
 		
-		return new BrokerImpl(hosts, parseTasks(args[1]), bandwidth, processingCost, scheduler);
+		return new BrokerImpl(hosts, parseTasks(args[1]), bandwidth, deadline, scheduler);
 	}
 }

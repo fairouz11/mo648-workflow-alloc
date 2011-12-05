@@ -26,6 +26,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	
 	private Host host;
 	private Vm vm;
+	private double cost;
 	
 	private BrokerImpl broker;
 	
@@ -44,7 +45,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	private Hashtable<TaskImpl, Double> availableResults;
 	
 	
-	public HostImpl(long mips, int processorCount, BrokerImpl broker)
+	public HostImpl(long mips, int processorCount, double cost, BrokerImpl broker)
 	{		
 		if (processorCount < 1)
 			throw new RuntimeException("Invalid processorCount");
@@ -53,6 +54,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 		this.transmissionList = new ArrayList<Transmission>();
 		this.currentTransmission = new Hashtable<HostImpl, Transmission>();
 		this.availableResults = new Hashtable<TaskImpl, Double>();
+		this.cost = cost;
 		
 		List<Pe> peList = new ArrayList<Pe>((int)processorCount);
 		
@@ -332,7 +334,7 @@ class HostImpl implements br.unicamp.ic.wfscheduler.Host
 	@Override
 	public double getCost()
 	{
-		return broker.getProcessingCost();
+		return cost;
 	}
 
 	@Override

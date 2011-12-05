@@ -4,10 +4,16 @@ public class Host
 {
 	private int processorCount;
 	private long mips;
+	private double cost;
 	
 	public int getProcessorCount()
 	{
 		return processorCount;
+	}
+	
+	public double getProcessingCost()
+	{
+		return cost;
 	}
 
 	public long getMips()
@@ -15,9 +21,10 @@ public class Host
 		return mips;
 	}
 
-	public Host(long mips, int processorCount)
+	public Host(long mips, int processorCount, double cost)
 	{
 		this.processorCount = processorCount;
 		this.mips = mips;
+		this.cost = cost;
 	}
 }

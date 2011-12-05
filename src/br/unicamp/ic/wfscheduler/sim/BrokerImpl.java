@@ -33,8 +33,8 @@ public class BrokerImpl implements Broker
 	private boolean newTask;
 	private boolean newTransmission;
 	
+	private double deadline;
 	private long bandwidth;
-	private double processingCost;
 	private Datacenter datacenter;
 	private DatacenterCharacteristics caracteristics;
 	private DatacenterBroker dcBroker;	
@@ -50,8 +50,7 @@ public class BrokerImpl implements Broker
 	
 	public BrokerImpl(List<br.unicamp.ic.wfscheduler.sim.input.Host> hosts,
 			List<br.unicamp.ic.wfscheduler.sim.input.Task> tasks,
-			long bandwidth, double processingCost,
-			IScheduler scheduler) throws Exception
+			long bandwidth, double deadline, IScheduler scheduler) throws Exception
 	{
 		Hashtable<br.unicamp.ic.wfscheduler.sim.input.Task, TaskImpl> taskMapping = 
 				new Hashtable<br.unicamp.ic.wfscheduler.sim.input.Task, TaskImpl>(tasks.size());
@@ -69,10 +68,11 @@ public class BrokerImpl implements Broker
 		this.scheduler = scheduler;
 		this.tasks = new ArrayList<TaskImpl>(tasks.size());
 		this.bandwidth = bandwidth;
-		this.processingCost = processingCost;
+		this.deadline = deadline;
 		this.dcBroker = new DatacenterBroker(this);
+		// warning: cost should be gathered outside cloudsim
 		this.caracteristics = new DatacenterCharacteristics("X86", "linux", "Xen", 
-				hostList, 10, processingCost, costPerMem, costPerStorage, costPerBw);
+				hostList, 10, 0, costPerMem, costPerStorage, costPerBw);
 		
 		
 		for (br.unicamp.ic.wfscheduler.sim.input.Task t : tasks)
@@ -99,7 +99,7 @@ public class BrokerImpl implements Broker
 		
 		for (br.unicamp.ic.wfscheduler.sim.input.Host h : hosts)
 		{
-			HostImpl hi = new HostImpl(h.getMips(), h.getProcessorCount(), this);
+			HostImpl hi = new HostImpl(h.getMips(), h.getProcessorCount(), h.getProcessingCost(), this);
 			vmList.add(hi.getCsVm());
 			this.hosts.add(hi);
 			this.hostMapping.put(hi.getCsHost(), hi);
@@ -126,11 +126,6 @@ public class BrokerImpl implements Broker
 	int getUserID()
 	{
 		return dcBroker.getId();
-	}
-
-	double getProcessingCost()
-	{
-		return processingCost;
 	}
 	
 	/**
@@ -233,6 +228,12 @@ public class BrokerImpl implements Broker
 	List<TaskImpl> getInternalTasks()
 	{
 		return tasks;
+	}
+	
+	@Override
+	public double getDeadline()
+	{
+		return deadline;
 	}
 
 	@Override
