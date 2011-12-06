@@ -18,10 +18,10 @@ public class PSOScheduler implements IScheduler
 	 * Attributes
 	 */
 	// total number of particles in the swarm
-	private static final int SWARM_SIZE = 50;
+	private static final int SWARM_SIZE = 30;
 	
 	// number of iterations of the PSO
-	private static final int MAX_ITERATION = 100;
+	private static final int MAX_ITERATION = 45;
 	
 	// inertia value
 	private static final double inertia = 0.75;
@@ -30,8 +30,8 @@ public class PSOScheduler implements IScheduler
 	private static final double COST_COMMUNICATION = 0.0;
 	
 	// acceleration coefficients
-	private static final double C1 = 0.5;
-	private static final double C2 = 1.5;
+	private static final double C1 = 1.5;
+	private static final double C2 = 0.5;
 	
 	private List<Task> tasks;
 	private List<Host> hosts;
@@ -60,7 +60,6 @@ public class PSOScheduler implements IScheduler
 	private Position gBestLoc;
 	
 	private Broker broker;
-	private Hashtable<Task,Host> assignedTasks;
 	private List<Task> finishedTasks;
 	private ArrayList<Task> unscheduledTasks;
 	private ArrayList<Task> readyTasks;
@@ -78,7 +77,6 @@ public class PSOScheduler implements IScheduler
 		gBestLoc = new Position();
 		gbest = 0.0;
 		
-		assignedTasks = new Hashtable<Task,Host>();
 		finishedTasks = new ArrayList<Task>();
 		unscheduledTasks = new ArrayList<Task>();
 	}
@@ -166,8 +164,7 @@ public class PSOScheduler implements IScheduler
 				}
 			}
 			
-			broker.assign(t, host); 
-			assignedTasks.put(t, host);
+			broker.assign(t, host);
 			
 			// now, we have to transmit the dependencies to this host
 			// all dependencies should be assigned by now
@@ -520,13 +517,19 @@ public class PSOScheduler implements IScheduler
 	@Override
 	public void transmissionFinished(Task task, Host sender, Host destionation)
 	{
-		finishedTasks.add(task);
+		if(!finishedTasks.contains(task)){
+			finishedTasks.add(task);
+		}
 		
 		calc_dependencies();
 		
-		if(readyTasks.size() > 0){
+		if(readyTasks.size() > 0)
+		{
 			PSO_Algorithm(readyTasks);
 			assign();
+			
+			System.out.println("------ number of unscheduled tasks = "+unscheduledTasks.size());
+			System.out.println("------ number of finished tasks = "+finishedTasks.size());
 		}
 	}
 }
