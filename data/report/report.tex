@@ -1,0 +1,335 @@
+\documentclass[a4paper,10pt, draft]{article}
+
+% escreve textos gerados em portugues
+\usepackage[brazilian]{babel}
+% aceita unicode
+\usepackage[utf8]{inputenc}
+
+
+\title{Comparação de algoritmos de escalonamento de workflows para redes híbridas}
+\author{Aloisio Vilas-Boas\and Andre Petris Esteve\and Atilio Gomes Luiz}
+\date{\today}
+
+%% \pdfinfo{%
+%%   /Title    ()
+%%   /Author   ()
+%%   /Creator  ()
+%%   /Producer ()
+%%   /Subject  ()
+%%   /Keywords ()
+%% }
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+--------------------------------------------------------------------------------------------\\
+Universidade Estadual de Campinas\\
+Instituto de Computação\\
+MO648 - Projeto de Redes Multimídia\\
+Prof. Dr. Nelson Luis Saldanha da Fonseca\\
+--------------------------------------------------------------------------------------------\\
+\end{center}
+
+\section{Introdução}
+
+(Escrever algo aqui)
+
+\section{Motivação}
+
+(Escrever algo aqui)
+
+\section{Descrição do contexto}
+
+Um usuário deseja executar um workflow de tarefas representado por um \emph{grafo acíclico 
+direcionado} (DAG). Cada tarefa é representada por um nó no DAG. Se uma tarefa depende de
+resultados de outra tarefa, então há um arco ligando os nós das respectivas tarefas no DAG.
+Um nó possui um peso relacionado ao número de intruções necessárias para que a tarefa seja executada.
+Já um arco possui um peso relacionado ao tamanho dos dados que devem ser transferidos entre tarefas
+dependentes.
+
+O usuário tem disponível uma infraestrutura de nuvem híbrida para execução do 
+seu workflow. Essa infra-estrutura é composta por diferentes nuvens: (a) uma nuvem 
+privada, onde execuções de tarefas não acarretam custos monetários ao usuário; e (b) 
+nuvens públicas nas quais o usuário paga pelo tempo de processamento utilizado.
+
+Este usuário tem um requisito de qualidade de serviço relacionado 
+ao tempo de execução do seu workflow, que chamamos de deadline. Dessa forma, o tempo 
+de execução do workflow deve ser menor que o deadline.
+
+O objetivo do usuário é realizar o escalonamento de seu DAG nos recursos da 
+nuvem híbridas dentro do deadline estipulado minimizando o custo monetário.
+
+\section{Objetivo do projeto}
+
+Este projeto teve como objetivo comparar diferentes algoritmos de escalonamento 
+para redes híbidas. Foram implementados quarto algoritmos: \emph{escalonador aleatório}, \emph{round robin},
+\emph{cost-driven scheduling using partial critial paths} e \emph{algoritmo de otimização por nuvem de partículas}.
+Os algoritmos são descritos na próxima seção.
+
+\section{Descrição dos Algorítmos}
+
+\subsection{Algoritmo Aleatório}
+
+O algoritmo baseia-se na alocação aleatória de recursos para o processamento de tarefas do workflow.
+
+Este escalonador realiza os seguintes passos:
+
+\begin{enumerate}
+
+    \item Realize a ordenação topológica do grafo de workflows.
+
+    \item Enquanto o grafo for não vazio, escolha um nó sem dependentes, ou seja, uma tarefa que não possua dependências 
+(ou cujas dependências já foram executadas).
+
+    \item Aleatoriamente selecione um recurso da nuvem e atribua a execução da tarefa selecionada ao recurso.
+
+    \item Remova o nó (tarefa) do grafo (workflow) e volte ao item 2 caso haja ainda tarefas a serem alocadas.
+
+\end{enumerate}
+
+O escalonador aleatório foi implementado apenas para servir como um limitante inferior para a análise.
+Não esperamos que nenhum dos demais escalonadores tenha uma performance inferior ao deste algoritmo.
+
+\subsection{Algoritmo Round Robin}
+
+O algoritmo baseia-se na alocação seqüêncial de recursos para o processamento de tarefas do workflow.
+
+Este escalonador realiza os seguintes passos:
+
+\begin{enumerate}
+
+    \item Realize a ordenação topológica do grafo de workflows.
+
+    \item A cada recurso da nuvem atribua um identificador único entre 0 e N-1, onde N é o número de recursos.
+
+    \item Defina o contador 'i' como 0.
+
+    \item Enquanto o grafo for não vazio, escolha um nó sem dependentes, ou seja, uma tarefa que não possua dependências 
+(ou cujas dependências já foram executadas).
+
+    \item Selecione o recurso da nuvem cujo identificador é (i mod N).
+
+    \item Atribua a execução da tarefa selecionada ao recurso obtido no item 5.
+
+    \item Incremente o contador 'i'.
+
+    \item Remova o nó (tarefa) do grafo (workflow) e volte ao item 4 caso haja ainda tarefas a serem alocadas.
+
+\end{enumerate}
+
+Este escalonador serve como base para as comparações. Espera-se que os demais algoritmos (com exceção do escalonador
+aleatório) apresentem melhor performance.
+
+\subsection{Cost-driven Scheduling Using Partial Critical Paths}
+
+(Descrever algorítmo)
+
+\subsection{Algoritmo de Otimização por Nuvem de Partículas}
+
+A solução para o problema de escalonamento, apresentada no artigo [1], é baseada numa heurística 
+denominada \emph{Particle Swarm Optimization} (PSO) ou \emph{Otimização por Nuvem de Partículas}. A heurística de 
+escalonamento tem como objetivo otimizar 
+o custo do mapeamento tarefa-máquina baseada na solução dada pelo PSO. O processo de otimização utiliza 
+dois algoritmos principais: (a) A heurística de escalonamento listada no algoritmo 1, e (b) Os passos do PSO 
+para otimização do mapeamento tarefa-máquina, listado no algoritmo 2. Antes de apresentar os algoritmos, vamos 
+dar uma breve descrição do algoritmo PSO.
+
+\subsubsection{Particle Swarm Optimization - PSO}
+
+Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algoritmo originalmente 
+desenvolvido por Eberhart e Kennedy[3]. O PSO é inspirado na simulação do comportamento social de um 
+bando de pássaros em revoada, com movimento localmente aleatório, mas globalmente determinado. No PSO, 
+assim como em outros algoritmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
+partículas, que em vez de utilizar operadores genéticos, evoluem através de cooperação e competição, entre si, 
+por diversas gerações. As partículas se beneficiam de sua própria experiência e da experiência de outros membros 
+do enxame durante a busca de um melhor fitness (alvo: comida, local para repouso, proteção de predadores, etc).
+
+\subsubsection{Estrutura do PSO}
+
+O PSO é muito similar a algumas técnicas da computação evolucionária, como os algoritmos genéticos, onde o 
+sistema é inicializado com uma população de soluções randômicas. Entretanto, difere dessas outras técnicas 
+populacionais, pois nenhum operador inspirado pelos procedimentos de DNA, é aplicado na população, para obter 
+uma nova geração de indivíduos. Em vez de mutação, são utilizadas partículas, movendo-se em um espaço de busca 
+n-dimensional, sendo cada uma delas um solução potencial para o problema. Cada partícula possui também uma 
+velocidade que é inicializada aleatoriamente, para que possa percorrer o espaço de soluções do problema.
+
+A i-ésima partícula é representada por:
+
+Xi = (Xi1, Xi2, …, Xid)
+
+A melhor solução prévia, ou seja, a posição que dá o melhor valor de aptidão da i-ésima partícula, é registrada e representada por:
+
+Pi = (Pi1, Pi2, …, Pid)
+
+A taxa da mudança de posição, que é chamada de velocidade, para a partícula i, é representada por:
+
+Vi = (Vi1, Vi2, …, Vid)
+
+As partículas são manipuladas pelas seguintes equações:
+
+(1) v(i, k+1) = w*v(i, k) + c1*rand1 * (pbest(i) – x(i, k)) + c2*rand2*(gbest – x(i, k))
+
+
+(2) x(i, k+1) = x(i, k) + v(i, k+1)
+
+
+Onde:\\
+
+v(i, k) – velocidade da partícula i na k-ésima iteração\\
+v(i, k+1) – velocidade da partícula i na (k+1)-ésima iteração\\
+w – fator de inércia que determina a diversificação ou a intensificação das partículas\\
+c(j) – coeficientes de aceleração; j=1, 2\\
+rand(i) – números randômicos entre 0 e 1; i =1, 2\\
+x(k, i) – posição atual da partícula i na k-ésima iteração\\
+pbest(i) – melhor posição da partícula i\\
+gbest – posição da melhor partícula da população\\
+x(i, k+1) – posição da partícula i na (k+1)-ésima iteração\\
+
+A Equação (1) é usada para calcular a nova velocidade da partícula, de acordo com sua velocidade 
+anterior e as distâncias entre sua posição atual, sua melhor posição, e a melhor posição do grupo. 
+A partir daí a partícula muda para uma nova posição de acordo com a Equação (5). O desempenho de cada 
+partícula é medido de acordo com uma função de aptidão pré-definida que é relacionada ao problema a ser 
+resolvido. No nosso caso, essa função de aptidão tenta minimizar os custos das alocações dos 
+recursos feitas em cada partícula.\\
+
+Cada partícula mantém o rastro de suas coordenadas no espaço-problema, que estão associadas à 
+melhor solução (fitness) que ela tenha encontrado até então. O valor do fitness também é armazenado. 
+Esse valor é chamado de pbest. Outro valor que é rastreado é o melhor entre todos os valores, e sua posição, 
+obtido por qualquer partícula na população. Esse valor é chamado de gbest.\\
+
+O conceito do PSO consiste a cada iteração, em mudança de velocidade, as partículas 
+alcancem suas posições de pbest e gbest. O algoritmo PSO, tal como descrito pelos 
+autores do artigo, pode ser visto na Figura 1.
+
+\section{O simulador}
+
+Para realizar a comparação dos algoritmos, foi necessário utilziar um simulador de núvens. O simulador é
+responsável por receber e tratar os pedidos de alocação de tarefas, bem como os pedidos de transmissão dos
+resultados de uma tarefa executada.
+
+Foi implementado um simulador que atendesse aos requisitos descritos anteriormente. A implementação baseou-se
+em um, já consolidado, simulador de núvens chamado \emph{cloudsim}\footnote{http://www.cloudbus.org/cloudsim/}.
+
+As alterações feitas e decisões de projeto tomadas são descrita com detalhes abaixo.
+
+\subsection{Arquitetura}
+
+A fim de que fosse possível testar um número variado de algoritmos e que a implementação do escalonador
+não estivesse altamente acoplada ao funcionamento do simulador, decidimos adicionar uma camada de abstração
+ào projeto.
+
+Essa camada de abstração provê funcionalidades básicas ao implementador do escalonador, sem revelar como o
+simulador as implementa. Desta forma, é possível alterar o simulador subjacente sem alterar o código dos escalonadores,
+bem como é possível desenvolver um escalonador sem conhecer qual será o simulador utilizado.
+
+Do ponto de vista da implementação, a camada de abstração é um conjunto de interfaces que define os contratos
+entre os escalonadores e o simulador.
+Ela é genérica o suficiente para permitir que diferentes escalonadores sejam suportados por diferentes simuladores.
+
+O principal motivo dessa decisão de projeto foi permitir o desenvolvimento em paralelo da implementação dos escalonadores
+e do simulador.
+
+Portanto, a arquitetura do projeto é como vista abaixo.
+
+\begin{center}
+----------------------------------------------------------\\
+                ESCALONADORES                 \\
+----------------------------------------------------------\\
+             CAMADA DE ABSTRAÇÃO              \\
+----------------------------------------------------------\\
+        SIMULADOR (COUDSIM MODIFICADO)        \\
+----------------------------------------------------------\\
+\end{center}
+
+\subsection{Interface do escalonador}
+
+O escalonador deve implementar uma interface que permite as seguintes
+interações entre ele e o simulador:
+
+\begin{enumerate}
+
+  \item Inicialização
+  \item Evento: fim de execução de tarefa previamente alocada
+  \item Evento: fim de transmissão de dados
+
+\end{enumerate}
+
+Abaixo descrevemos cada possível interação entre o simulador e o escalonador.
+
+Em (1) o escalonador deve preparar o ambiente para iniciar as alocações. Se o escalonador
+não se importar com os eventos do simulador, ele pode realizar a alocação de todas as tarefas
+neste momento. Nota: ao menos uma tarefa deve ser alocada nesta etapa, pois caso nenhuma tarefa
+seja alocada o simulador termina, uma vez que não há o que simular.
+
+Em (2) o simulador avisa ao escalonador que uma tarefa previamente alocada terminou sua execução.
+O escalonador pode obter informações sobre o processamento, bem como alocar novas tarefas, se desejar.
+
+Em (3) o simulador avisa ao escalonador que uma transmissão de dados terminou.
+O escalonador pode obter informações sobre a transmissão, bem como alocar novas tarefas, se desejar.
+
+\subsection{Interface do simulador}
+
+O simulador deve, por sua vez, implementar uma interface que permite que escalonadores
+realizem operações básicas durante a simulação. Essas operações são:
+
+\begin{enumerate}
+
+  \item Obter tarefas (DAG do workflow)
+  \item Obter recursos (recursos da rede pública e privada)
+  \item Alocar uma tarefa
+  \item Alocar uma transmissão
+
+\end{enumerate}
+
+Abaixo descrevemos cada funcionalidade:
+
+Em (1) o simulador provê o DAG que contém as tarefas, suas dependências e os pesos das tarefas (número
+de instruções) e os pesos dos arcos (tamanho dos dados a serem transmitidos entre tarefas dependentes).
+
+Em (2) o simulador provê uma lista de recursos da nuvem hibrida. Os recursos da nuvem privada diferem
+dos da nuvem publica por não possuirem custo atrelado a sua utilização.
+
+Em (3) o simulador permite que o escalonador aloque uma tarefa para execução em um recurso da nuvem.
+
+Em (4) o simulador permite que o escalonador aloque uma transmissão de dados (resultado de uma tarefa)
+entre recursos da rede. A limitação imposta aqui é que uma transmissão só é válida se ela iniciar em um
+recurso que executou a tarefa cujos dados estão sendo transmitidos.
+
+\subsection{Alterações do simulador}
+
+O simulador de núvens \emph{cloudsim} não serviu imediatamente ao nosso propósito. Algumas funcionalidades
+não eram implementadas ou eram parcialmente implementadas:
+
+\begin{enumerate}
+
+  \item Simulação da transmissão de resultados entre recursos
+  \item Simular fila de transmissões
+  \item Considerar dependências de tarefas antes de iniciar sua execução
+
+\end{enumerate}
+
+Abaixo exemplificamos cada requisito.
+
+Considere duas tarefas A e B, sendo que B depende dos resultados de A para executar.
+Considere também dois recursos $\alpha$ e $\beta$.
+Se A for alocada em $\alpha$ e B em $\beta$, então antes de B iniciar em $\beta$ é necessário
+que sejam transmitidos os dados gerados por A de $\alpha$ para $\beta$.
+
+Realizar a simulação da transmissão e considerar o tempo gasto durante o processo é o
+requisito descrito em (1).
+
+Tendo em mente o exemplo anterior, suponha que foi alocada uma terceira tarefa, C, em
+$\alpha$, antes que A fosse alocada. Contudo, o escalonador já previu a transmissão do
+resultado de A para $\beta$. Assim é necessário manter uma fila de transmissões entre
+recursos. Desta forma, é possível simular um canal entre dois recursos e garantir que
+o canal realize uma transmissão por vez, bem como enfileirar transmissões requisitadas
+em um canal em uso. Este é o requisito (2).
+
+O requisito (3) é necessário uma vez que uma tarefa não pode ser executada até que todas
+suas dependências tenham sido transmitidas ao recurso que realizará a execução. Desta forma,
+caso uma tarefa seja alocada e suas dependências ainda não tenham terminado de ser transmitidas
+a tarefa consome processamento do recurso, mas não avança sua execução.
+
+\end{document}
