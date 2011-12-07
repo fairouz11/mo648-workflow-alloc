@@ -1,0 +1,47 @@
+Quanto à conveção:
+
+	Host padrão é um pentium 4 extreme (http://en.wikipedia.org/wiki/Instructions_per_second) com cerca de 10k MIPS.
+
+	A largura de banda é 100 Mb/s (12,5MB/s).
+
+	O custo de um PC high CPU na amazon (o mais caro) é  $1.16/hora (http://aws.amazon.com/ec2/). Isso dá 0,0000322222
+	por segundo (ou por 10kMips).
+
+Quanto aos diretórios:
+
+	data - contém dados
+	data/datacenter - contém datacenters (usar apenas o 0)
+	data/workflows - workflows - dividir por pastas. workflows em uma mesma pasta serão simulados em conjunto e terão sua média como resultado
+	data/results - resultados - separar por pastas - mesmo esquema de workflows -> nomear o arquivo de resultado com a extensão do algoritmo (.pso, .robim, etc)
+
+Quanto à simulação:
+
+	Todo algoritmo randomico (menos o random - por questões obvias) deve repetir a simulação várias vezes para reduzir
+	seu erro.
+
+	Usar sempre 0.95% de intervalo de confiança. Lembrar que o grau de liberdade da T-Student é N-1 onde N é o número de dados.
+
+Quanto aos scripts de simulação:
+
+	Usar apenas run_and_forget.sh. Os demais são auxiliares.
+
+	./run_and_forget.sh algorithm_name workflow_type output_folder deadline execution_number t-student
+
+		algorithm_name é o nome do algoritmo aceito pelo simulador (random, pso, robim, etc. - vide Main.java do simulador para saber todos)
+		workflow_type - é a pasta dentro de data/workflows contendo o que será simulador (ex. random)
+		output_folder - diretório onde arquivos de saída serão armazenados -> jogar em algum lugar da /tmp  (lembrar depois de copiar o arquivo de resultado)
+		deadline - valor do deadline (segundos)
+		execution_number - quantas vezes executar cada entrada (1 se seu algoritmo não tem componente aleatória)
+		t-student - valor da t-student com 0.95 de intervalo de confiança (ver na tabela ttable)
+
+		O script ao terminar gravará na pasta de saída um arquivo result.data com a média do tempo, custo e seus respectivos erros.
+
+Quanto aos workflows:
+
+	* Random:
+		20 grafos variando entre 50 e 200 nós, 60 e 600 kMI, 10kB e 10MB de output
+
+		Se algoritmo != PSO, usar 19 graus de liberdade (1.729).
+		Se algoritmo == PSO, usar (19 + nro de execuções) graus de liberdade.
+
+

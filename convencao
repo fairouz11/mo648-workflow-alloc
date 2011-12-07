@@ -1,6 +1,0 @@
-Host padrão é um pentium 4 extreme (http://en.wikipedia.org/wiki/Instructions_per_second) com cerca de 10k MIPS.
-
-A largura de banda é 100 Mb/s (12,5MB/s).
-
-O custo de um PC high CPU na amazon (o mais caro) é  $1.16/hora (http://aws.amazon.com/ec2/). Isso dá 0,0000322222
-por segundo (ou por 10kMips).
