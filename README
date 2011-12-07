@@ -36,6 +36,11 @@ Quanto aos scripts de simulação:
 
 		O script ao terminar gravará na pasta de saída um arquivo result.data com a média do tempo, custo e seus respectivos erros.
 
+	Exemplo: ./run_and_forget.sh roundrobim random /tmp/outputrobim/ 0          1                1.729
+                                      ^algoritmo ^workflow    ^output    ^deadline  ^nro execucoes   ^t-student
+         								   
+									       
+
 Quanto aos workflows:
 
 	* Random:
