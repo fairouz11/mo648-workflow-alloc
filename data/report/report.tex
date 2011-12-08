@@ -1,9 +1,15 @@
-\documentclass[a4paper,10pt, draft]{article}
+\documentclass[a4paper,10pt]{article}
 
 % escreve textos gerados em portugues
 \usepackage[brazilian]{babel}
 % aceita unicode
 \usepackage[utf8]{inputenc}
+% pacotes para inserção de imagens
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\DeclareGraphicsExtensions{.pdf,.png,.eps}
+% pacote para fórmulas matemáticas
+\usepackage{amsmath}
 
 
 \title{Comparação de algoritmos de escalonamento de workflows para redes híbridas}
@@ -155,53 +161,122 @@ uma nova geração de indivíduos. Em vez de mutação, são utilizadas partícu
 n-dimensional, sendo cada uma delas um solução potencial para o problema. Cada partícula possui também uma 
 velocidade que é inicializada aleatoriamente, para que possa percorrer o espaço de soluções do problema.
 
-A i-ésima partícula é representada por:
-
-Xi = (Xi1, Xi2, …, Xid)
-
-A melhor solução prévia, ou seja, a posição que dá o melhor valor de aptidão da i-ésima partícula, é registrada e representada por:
-
-Pi = (Pi1, Pi2, …, Pid)
-
-A taxa da mudança de posição, que é chamada de velocidade, para a partícula i, é representada por:
-
-Vi = (Vi1, Vi2, …, Vid)
-
+A $i$-ésima partícula é representada por:
+\begin{equation}
+X_{i} = (X_{i1}, X_{i2},\ldots, X_{id})
+\end{equation}
+A melhor solução prévia, ou seja, a posição que dá o melhor valor de aptidão da $i$-ésima partícula, é registrada e representada por:
+\begin{equation}
+P_{i} = (P_{i1}, P_{i2},\ldots, P_{id})
+\end{equation}
+A taxa da mudança de posição, que é chamada de velocidade, para a partícula $i$, é representada por:
+\begin{equation}
+V_{i} = (V_{i1}, V_{i2},\ldots, V_{id})
+\end{equation}
 As partículas são manipuladas pelas seguintes equações:
-
-(1) v(i, k+1) = w*v(i, k) + c1*rand1 * (pbest(i) – x(i, k)) + c2*rand2*(gbest – x(i, k))
-
-
-(2) x(i, k+1) = x(i, k) + v(i, k+1)
-
+\begin{equation}
+v_{i}^{k+1} = w*v_{i}^k + c_{1}*rand_{1} * (pbest_{i} - x_{i}^k) + c_{2}*rand_{2} * (gbest - x_{i}^k) \label{velocidade}
+\end{equation}
+\begin{equation}
+x_{i}^{k+1} = x_{i}^k + v_{i}^{k+1} \label{posicao}
+\end{equation}
 
 Onde:\\
 
-v(i, k) – velocidade da partícula i na k-ésima iteração\\
-v(i, k+1) – velocidade da partícula i na (k+1)-ésima iteração\\
-w – fator de inércia que determina a diversificação ou a intensificação das partículas\\
-c(j) – coeficientes de aceleração; j=1, 2\\
-rand(i) – números randômicos entre 0 e 1; i =1, 2\\
-x(k, i) – posição atual da partícula i na k-ésima iteração\\
-pbest(i) – melhor posição da partícula i\\
-gbest – posição da melhor partícula da população\\
-x(i, k+1) – posição da partícula i na (k+1)-ésima iteração\\
+\begin{description}
+\item
+$v_{i}^k$ - velocidade da partícula $i$ na $k$-ésima iteração\\
+$v_{i}^{k+1}$ - velocidade da partícula $i$ na $(k+1)$-ésima iteração\\
+$w$ – fator de inércia que determina a diversificação ou a intensificação das partículas\\
+$c_{j}$ – coeficientes de aceleração; $j$ = 1,2\\
+$rand_{i}$ – números randômicos entre 0 e 1; $i$ = 1,2\\
+$x_{i}^k$ – posição atual da partícula $i$ na $k$-ésima iteração\\
+$pbest_{i}$ – melhor posição da partícula $i$\\
+$gbest$ – posição da melhor partícula da população\\
+$x_{i}^{k+1}$ – posição da partícula $i$ na $(k+1)$-ésima iteração\\
+\end{description}
 
-A Equação (1) é usada para calcular a nova velocidade da partícula, de acordo com sua velocidade 
+A Equação \eqref{velocidade} é usada para calcular a nova velocidade da partícula, de acordo com sua velocidade 
 anterior e as distâncias entre sua posição atual, sua melhor posição, e a melhor posição do grupo. 
-A partir daí a partícula muda para uma nova posição de acordo com a Equação (5). O desempenho de cada 
+A partir daí a partícula muda para uma nova posição de acordo com a Equação \eqref{posicao}. O desempenho de cada 
 partícula é medido de acordo com uma função de aptidão pré-definida que é relacionada ao problema a ser 
 resolvido. No nosso caso, essa função de aptidão tenta minimizar os custos das alocações dos 
 recursos feitas em cada partícula.\\
 
 Cada partícula mantém o rastro de suas coordenadas no espaço-problema, que estão associadas à 
-melhor solução (fitness) que ela tenha encontrado até então. O valor do fitness também é armazenado. 
+melhor solução (\emph{fitness}) que ela tenha encontrado até então. O valor do fitness também é armazenado. 
 Esse valor é chamado de pbest. Outro valor que é rastreado é o melhor entre todos os valores, e sua posição, 
 obtido por qualquer partícula na população. Esse valor é chamado de gbest.\\
 
 O conceito do PSO consiste a cada iteração, em mudança de velocidade, as partículas 
 alcancem suas posições de pbest e gbest. O algoritmo PSO, tal como descrito pelos 
-autores do artigo, pode ser visto na Figura 1.
+autores do artigo, pode ser visto nos passos abaixo:\\
+
+\begin{description}
+\item[1:] Set particle dimension as equal to the size of ready tasks.
+\item[2:] Initialize particles position and velocity randomly.
+\item[3:] For each particle, calculate its fitness value.
+\item[4:] If the fitness value is better than the previous best \emph{pbest}, set the current fitness value as the new \emph{pbest}.
+\item[5:] After Steps 3 and 4 for all particles, select the best particle as \emph{gbest}.
+\item[6:] For all particles, calculate velocity using Equation \eqref{posicao} and update their positions using Equation \eqref{velocidade}.
+\item[7:] If the stopping criteria or maximum iteration is not satisfied, repeat from Step 3.
+\end{description}
+
+
+
+\subsubsection{Explicação do PSO}
+
+O algoritmo inicia com a inicialização aleatória da posição e velocidade das partículas. Neste projeto, 
+cada partícula representa uma lista das tarefas a serem atribuídas e a dimensão de cada partícula 
+representa o número de tarefas no workflow.\\
+
+O valor atribuído a cada dimensão das partículas são os identificadores dos recursos (valores inteiros). Deste modo, 
+uma partícula representa um mapeamento de uma tarefa para uma máquina. No nosso problema, por exemplo, se o 
+algoritmo receber como entrada um workflow com 5 tarefas, cada partícula terá 5 dimensões, que poderão variar 
+a medida que o algoritmo é executado. O conteúdo de cada dimensão $i$ da partícula, ($0 \leq i < \text{número de máquinas}$), 
+é o identificador da máquina para a qual a tarefa $i$ foi atribuída. Por exemplo, uma partícula no nosso algoritmo, 
+pode ser melhor ilustrada na Figura \eqref{particula}.\\
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[scale=.5]{fig1.eps}
+\caption{Exemplo de partícula para um workflow com 5 tarefas}
+\label{particula}
+\end{figure}
+
+\subsubsection{Explicação da heurística de escalonamento}
+
+A heurística de escalonamento apresentada pelos autores do artigo, pode ser resumida nos passos
+apresentados logo abaixo:\\
+
+\begin{description}
+\item[1:] Calculate average computation cost of all tasks in all compute resources.
+\item[2:] Calculate average cost of (communication/size of data) between resources.
+\item[3:] Compute PSO(\emph{allTasks}) /* where \emph{allTasks} is a set of all tasks of the workflow */
+\item[4:] repeat steps 5 to 10 until there are unscheduled tasks
+\item[5:] for all ''ready'' tasks do: assign tasks $t_{i}$ to resources $p_{j}$ according to the solution provided by PSO
+\item[6:] Dispatch all the mapped tasks
+\item[7:] Wait for \emph{polling time}
+\item[8:] Update the ready task list
+\item[9:] Update the average cost of communication between resources according to the current network load
+\item[10:] Compute PSO(remainingTasks)
+\end{description}
+
+Os valores para custo médio de computação e comunicação, assim como os valores para o tamanho 
+do arquivo transmitido entre tarefas, são computados de acordo com os dados passados como entrada para o simulador.\\
+
+O passo inicial do algorítmo é computar o mapeamento de todas as tarefas do workflow, independente das dependências
+existentes entre as tarefas(passo 3: Compute PSO((allTasks)). Este mapeamento otimiza o custo total de computação do workflow. 
+Para validar as dependências entre as tarefas, o algoritmo atribui as tarefas prontas para os hosts de acordo com o 
+mapeamento dado pelo PSO (passo 5). Após despachar as tarefas para execução, o escalonador espera um determinado tempo, que
+os autores do artigo denominaram \emph{polling time}. Esse tempo é para o simulador adquirir o status das tarefas.
+Na nossa simulação, o algoritmo PSO é notificado pelo cloudsim todas as vezes que uma tarefa termina sua execução (passo 7).
+Dependendo da quantidade de tarefas finalizadas, a lista de tarefas prontas é atualizada, essa lista conterá todas as tarefas 
+cujos pais completaram sua execução e já transmitiram todos os arquivos necessários (passo 8). No passo 9, os autores 
+atualizam a matriz com os valores dos custos de comunicação entre os recursos pois, segundo o modelo implementado por eles, 
+esses valores podem variar. No caso da nossa implementação, esses valores são fixos, logo esse passo não precisou ser implementado 
+no nosso projeto. No passo 10, o PSO é computado novamente para as tarefas que ainda não foram escalonadas. Os passos 6 a 10 
+são repetidos até que todas as tarefas do worflow estejam escalonadas.\\
 
 \section{O simulador}
 
