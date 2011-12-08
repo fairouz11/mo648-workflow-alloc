@@ -1,3 +1,3 @@
-# Qui Dez  8 09:38:57 BRST 2011: Simulation of data/workflows/pso/ using random scheduler and 1 executions with 9999999999 as deadline
+# Qui Dez  8 15:07:19 BRST 2011: Simulation of data/workflows/pso/ using random scheduler and 1 executions with 9999999999 as deadline
 # costMean timeMean costErr timeErr
-.18768787055999996600	271.71217687466666200000	.03681265270899578119	43.43003007875419909531
+.18358920671999998400	293.71272714133333600000	.02784337897238240027	40.20107661112857784922

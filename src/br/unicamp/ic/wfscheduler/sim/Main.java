@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import br.unicamp.ic.wfscheduler.IScheduler;
 import br.unicamp.ic.wfscheduler.impl.random.RandomScheduler;
 import br.unicamp.ic.wfscheduler.impl.roundrobin.RoundRobinScheduler;
+import br.unicamp.ic.wfscheduler.impl.pcp.PartialCriticalPathsScheduler;
 import br.unicamp.ic.wfscheduler.impl.pso.PSOScheduler;
 import br.unicamp.ic.wfscheduler.sim.input.Host;
 import br.unicamp.ic.wfscheduler.sim.input.Task;
@@ -49,7 +50,7 @@ public class Main
 		else if (schedulerName.equals("pso"))
 			scheduler = new PSOScheduler();
 		else if (schedulerName.equals("pcp"))
-			scheduler = new RoundRobinScheduler();
+			scheduler = new PartialCriticalPathsScheduler();
 		else
 		{
 			System.err.println("Invalid scheduler name");

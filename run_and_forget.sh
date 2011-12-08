@@ -135,7 +135,7 @@ do
 
     for x in `seq 1 $executions`
     do
-        echo "Core$i running $wf.$x"
+        echo "Core$1 running $wf.$x"
    	./run.sh $datacenter $indir$wf $execout $algorithm $deadline
 
         cost=$(sed -n "2p" $execout)

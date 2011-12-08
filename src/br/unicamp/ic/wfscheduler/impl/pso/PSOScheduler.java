@@ -18,10 +18,10 @@ public class PSOScheduler implements IScheduler
 	 * Attributes
 	 */
 	// total number of particles in the swarm
-	private static final int SWARM_SIZE = 25;
+	private static final int SWARM_SIZE = 15;
 	
 	// number of iterations of the PSO
-	private static final int MAX_ITERATION = 45;
+	private static final int MAX_ITERATION = 30;
 	
 	// inertia value
 	private static final double inertia = 0.75;
