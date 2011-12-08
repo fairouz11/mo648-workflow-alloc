@@ -1,12 +1,19 @@
 package br.unicamp.ic.wfscheduler.impl.pcp;
 
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+
+
 import br.unicamp.ic.wfscheduler.*;
+
+
+
 
 public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
@@ -293,7 +300,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				taskIndex--;
 				t = criticalPath.get(taskIndex);
 			}else{
-				long st = computeST(t,s);
+				long st = computeST(t,s,currentSchedulle);
 				long c = computeC(t,s);
 				if(constraints.containsKey(t)){
 					if(st<constraints.get(t));{
@@ -415,7 +422,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return exCost+parentsTransferCost+childTransferCost;
 	}
 
-	private long computeST(Task t, Host s) {
+	
+	
+	
+	private long computeST(Task t, Host s,HashMap<Task, Assignment> currentSchedulle) {
 		boolean found = false;
 		long minST = estimateStartTime(t,s);
 		long et = t.getLength()/s.getProcessingSpeed();
