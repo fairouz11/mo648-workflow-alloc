@@ -21,9 +21,9 @@ public class SchedulleResponse {
 	}
 	public SchedulleResponse() {
 		super();
-		this.failTask = null;
-		this.suggestedStartTime = (Long) null;
-		this.successful = (Boolean) null;
+	//	this.failTask = null;
+		//this.suggestedStartTime =  -1;
+		//this.successful = (Boolean) null;
 	}
 	
 	public Task getFailTask() {
