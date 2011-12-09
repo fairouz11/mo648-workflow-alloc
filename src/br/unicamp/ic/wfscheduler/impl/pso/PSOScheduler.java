@@ -21,7 +21,7 @@ public class PSOScheduler implements IScheduler
 	private static final int SWARM_SIZE = 15;
 	
 	// number of iterations of the PSO
-	private static final int MAX_ITERATION = 40;
+	private static final int MAX_ITERATION = 30;
 	
 	// inertia value
 	private static final double inertia = 0.75;
