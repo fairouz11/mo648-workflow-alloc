@@ -65,6 +65,8 @@ public class PSOScheduler implements IScheduler
 	private ArrayList<Task> readyTasks;
 	private ArrayList<Integer> number_dependencies;
 	
+	private boolean flag;
+	
 	/**
 	 * Constructor
 	 */
@@ -79,6 +81,8 @@ public class PSOScheduler implements IScheduler
 		
 		finishedTasks = new ArrayList<Task>();
 		unscheduledTasks = new ArrayList<Task>();
+		
+		flag = false;
 	}
 	
 	public void startScheduler(Broker broker)
@@ -179,6 +183,7 @@ public class PSOScheduler implements IScheduler
 		}
 		
 		readyTasks.clear();
+		flag = true;
 	}
 	
 	/**
@@ -235,7 +240,7 @@ public class PSOScheduler implements IScheduler
 		//Initialize the unscheduledTasks vector with the list of all tasks
 		unscheduledTasks = new ArrayList<Task>(tasks);
 		
-		//Initializes a counter vector to manage the number of dependencies finished
+		//Initializes a counter vector to manager the number of dependencies finished
 		//and initializes all its values with 0
 		number_dependencies = new ArrayList<Integer>(tasks.size());
 		for(int w=0; w<tasks.size(); w++)
@@ -384,9 +389,11 @@ public class PSOScheduler implements IScheduler
 			{
 				//Each position dimension must receive a value between (0..#_of_hosts(exclusive))
 				int randomNum = rand.nextInt(numberHosts);
+				
 				particle.getPosition().addPosition(readyTasks.get(j), randomNum);
-				//As the article does not specify the range of values to velocity, I suppose values between 1..10
+				//As the article does not specify the range of values to velocity, I suppose values between 0..1
 				double randomNumDouble = rand.nextDouble();
+				
 				particle.getVelocity().addVelocity(readyTasks.get(j), randomNumDouble);
 			}
 			
@@ -459,7 +466,7 @@ public class PSOScheduler implements IScheduler
 				for (Enumeration<Task> e2 = p.getPosition().getPosition().keys() ; e2.hasMoreElements() ;)
 				{
 					Task t2 = e2.nextElement();
-					if(!(p.getPosition().getPosition().get(t2).equals(h.getID())))
+					if(!(p.getPosition().getPosition().get(t2) == h.getID()))
 					{
 						partial_cost += (d(p,t,t2)*edge_weight.get(t).get(t2));
 					}
@@ -477,7 +484,7 @@ public class PSOScheduler implements IScheduler
 			
 		for (Enumeration<Task> e = p.getPosition().getPosition().keys() ; e.hasMoreElements() ;) {
 			Task t = e.nextElement();
-			if(p.getPosition().getPosition().get(t).equals(h.getID())){
+			if(p.getPosition().getPosition().get(t) == h.getID()){
 				Hashtable<Host, Double> aux_matrix = TH_matrix.get(t);
 				w_h += aux_matrix.get(h);
 			}
@@ -517,19 +524,24 @@ public class PSOScheduler implements IScheduler
 	@Override
 	public void transmissionFinished(Task task, Host sender, Host destionation)
 	{
-		if(!finishedTasks.contains(task)){
+		
+		boolean contain = false;
+		for(Task t : finishedTasks){
+			if(t.getID() == task.getID()){
+				contain = true;
+			}
+		}
+		if(!contain){
 			finishedTasks.add(task);
 		}
 		
 		calc_dependencies();
 		
-		if(readyTasks.size() > 0)
+		if((readyTasks.size() > 0) && (flag==true))
 		{
+			flag = false;
 			PSO_Algorithm(readyTasks);
 			assign();
-			
-			System.out.println("------ number of unscheduled tasks = "+unscheduledTasks.size());
-			System.out.println("------ number of finished tasks = "+finishedTasks.size());
 		}
 	}
 }

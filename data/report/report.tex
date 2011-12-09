@@ -75,6 +75,7 @@ para redes híbidas. Foram implementados quarto algoritmos: \emph{escalonador al
 Os algoritmos são descritos na próxima seção.
 
 \section{Descrição dos Algorítmos}
+\label{algoritmos}
 
 \subsection{Algoritmo Aleatório}
 
@@ -134,18 +135,18 @@ aleatório) apresentem melhor performance.
 
 \subsection{Algoritmo de Otimização por Nuvem de Partículas}
 
-A solução para o problema de escalonamento, apresentada no artigo [1], é baseada numa heurística 
+A solução para o problema de escalonamento, apresentada no artigo \cite{pso_a}, é baseada numa heurística 
 denominada \emph{Particle Swarm Optimization} (PSO) ou \emph{Otimização por Nuvem de Partículas}. A heurística de 
 escalonamento tem como objetivo otimizar 
 o custo do mapeamento tarefa-máquina baseada na solução dada pelo PSO. O processo de otimização utiliza 
-dois algoritmos principais: (a) A heurística de escalonamento listada no algoritmo 1, e (b) Os passos do PSO 
-para otimização do mapeamento tarefa-máquina, listado no algoritmo 2. Antes de apresentar os algoritmos, vamos 
+dois algoritmos principais: (a) A heurística de escalonamento e (b) Os passos do PSO 
+para otimização do mapeamento tarefa-máquina, listados em uma seção posterior. Antes de apresentar os algoritmos, vamos 
 dar uma breve descrição do algoritmo PSO.
 
 \subsubsection{Particle Swarm Optimization - PSO}
 
 Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algoritmo originalmente 
-desenvolvido por Eberhart e Kennedy[3]. O PSO é inspirado na simulação do comportamento social de um 
+desenvolvido por Eberhart e Kennedy \cite{pso_article}. O PSO é inspirado na simulação do comportamento social de um 
 bando de pássaros em revoada, com movimento localmente aleatório, mas globalmente determinado. No PSO, 
 assim como em outros algoritmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
 partículas, que em vez de utilizar operadores genéticos, evoluem através de cooperação e competição, entre si, 
@@ -239,7 +240,7 @@ pode ser melhor ilustrada na Figura \eqref{particula}.\\
 
 \begin{figure}[!htb]
 \centering
-\includegraphics[scale=.5]{fig1.eps}
+\includegraphics[scale=.5]{figures/fig1.eps}
 \caption{Exemplo de partícula para um workflow com 5 tarefas}
 \label{particula}
 \end{figure}
@@ -285,7 +286,7 @@ responsável por receber e tratar os pedidos de alocação de tarefas, bem como 
 resultados de uma tarefa executada.
 
 Foi implementado um simulador que atendesse aos requisitos descritos anteriormente. A implementação baseou-se
-em um, já consolidado, simulador de núvens chamado \emph{cloudsim}\footnote{http://www.cloudbus.org/cloudsim/}.
+em um, já consolidado, simulador de núvens chamado \emph{cloudsim}\cite{cloudsim}.
 
 As alterações feitas e decisões de projeto tomadas são descrita com detalhes abaixo.
 
@@ -377,7 +378,7 @@ recurso que executou a tarefa cujos dados estão sendo transmitidos.
 Nesta seção descrevemos quais foram os requisitos que não estavam presentes no simulador original
 e que foram implementados na nossa versão.
 
-Utilizamos o \emph{cloudsim} release 2.1.1 como base para as modificações.
+Utilizamos o \emph{cloudsim}\footnote{http://www.cloudbus.org/cloudsim/} release 2.1.1 como base para as modificações.
  
 O simulador de núvens \emph{cloudsim} não serviu imediatamente ao nosso propósito. Algumas funcionalidades
 não eram implementadas ou eram parcialmente implementadas:
@@ -414,11 +415,62 @@ a tarefa consome processamento do recurso, mas não avança sua execução.
 
 \section{Metodologia}
 
-(Descrever de maneira geral o processo de execução)
+O experimento proposto deseja verificar a performance dos algoritmos de escalonamento
+descritos na seção \ref{algoritmos}. Para isso foi estipulado um cenário padrão, que
+compreende a configuração dos recursos nos quais as tarefas serão executadas.
+
+O cenário foi definido como na tabela \ref{tab:datacenter}.
+
+\begin{table}
+\centering
+
+  \begin{tabular}{|l|l|}  
+
+%    Datacenter & Processamento (kMIPS) & C \\ \hline
+%    a & b &c \\ \hline
+
+  \end{tabular}
+  \caption{Configuração de recursos usada no experimento}
+  \label{tab:datacenter}
+\end{table}
+
+O experimento consiste da execução de diversos DAGs (vide seção \ref{grafosusados}),
+cada grafo representando um workflow.
+
 
 \subsection{Grafos usados}
+\label{grafosusados}
 
-(Quais foram os grafos gerados)
+(Descrever grafos usados)
+
+\begin{figure}[!htb]
+
+\centering
+\includegraphics[scale=.25]{figures/airsn.png}
+\caption{AIRSN \protect\cite{bit}}
+\label{airsn}
+
+\centering
+\includegraphics[scale=.25]{figures/chimera1.png}
+\caption{Chimera 1 \protect\cite{bit}}
+\label{chimera1}
+
+\centering
+\includegraphics[scale=.25]{figures/chimera2.png}
+\caption{Chimera 2 \protect\cite{bit}}
+\label{chimera2}
+
+\centering
+\includegraphics[scale=.25]{figures/ligo.png}
+\caption{LIGO \protect\cite{bit}}
+\label{ligo}
+
+\centering
+\includegraphics[scale=.25]{figures/montage.png}
+\caption{Montage \protect\cite{bit}}
+\label{montage}
+
+\end{figure}
 
 \subsection{Experimentos realizados}
 
@@ -432,5 +484,42 @@ a tarefa consome processamento do recurso, mas não avança sua execução.
 
 (Conclusões)
 
+\section{Agradecimentos}
+
+Agradecimentos
+
+\begin{thebibliography}{9}
+
+\bibitem{bit}
+  Luiz F. Bittencourt, Rizos Sakellariou and Edmundo R. M. Madeira,
+  \emph{DAG Scheduling Using a Lookahead Variant
+of the Heterogeneous Earliest Finish Time Algorithm}.
+  2010 18th Euromicro Conference on Parallel Distributed and Networkbased Processing.
+
+\bibitem{cloudsim}
+  Rodrigo N. Calheiros, Rajiv Ranjan, Anton Beloglazov, Cesar A. F. De Rose, and Rajkumar Buyya
+  \emph{CloudSim: A Toolkit for Modeling and Simulation of Cloud Computing Environments and Evaluation of Resource Provisioning Algorithms}.
+  Software: Practice and Experience (SPE),
+  Volume 41, Number 1, Pages: 23-50, ISSN: 0038-0644,
+  Wiley Press, New York, USA, January, 2011.
+
+\bibitem{pso_a}
+  Suraj Pandey, Linlin Wu, Siddeswara M. Guru, Rajkumar Buyya.
+  \emph{A particle swarm    optimization-based heuristic for scheduling workflow applications in cloud computing environments}. 
+  In: 24th IEEE INTERNATIONAL CONFERENCE ON ADVANCED INFORMATION NETWORKING AND APPLICATIONS. Melbourn, Australia. 2010.               
+
+\bibitem{pcp}
+  Saeid Abrishami, Mahmoud Naghibzadeh, Dick Epema. 
+  \emph{Cost-driven scheduling of grid workflows using partial critical paths}. 
+  In: 11th IEEE/ACM INTERNATIONAL CONFERENCE ON GRID COMPUTING. October, 2010.
+                                                    
+
+\bibitem{pso_article}
+   James Kennedy, Russel Eberhart. 
+   \emph{Particle swarm optimization}. 
+   In: IEEE International Conference on Neural Networks. 1995.
+ 
+
+\end{thebibliography}
 
 \end{document}
