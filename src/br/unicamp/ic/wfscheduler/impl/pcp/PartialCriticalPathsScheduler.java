@@ -31,6 +31,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
 		bandwidth = broker.getBandwidth();
+		//deadline = (long) broker.getDeadline();
+		transmissionCost = 0;
+		
 		scheduleWorkflow();
 	}
 	
@@ -224,7 +227,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 		
 		while (!isScheduled(criticalPath)) {
-			SchedulleResponse criticalPathSchedule = SchedulePath(criticalPath);
+			SchedulleResponse criticalPathSchedule = SchedulePathRecursiveHelper(criticalPath);
 			if(!criticalPathSchedule.isSuccessful()){
 				return criticalPathSchedule;
 			}
@@ -273,7 +276,193 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				}
 			}
 	}
+	
+	private SchedulleResponse SchedulePathRecursiveHelper(ArrayList<Task> criticalPath) {
+		
+		HashMap<Task, Assignment> currentSchedulle = new HashMap<Task, Assignment>();
+		HashMap<Host, ArrayList<TimeSlot>> currentTimeSlots = (HashMap<Host, ArrayList<TimeSlot>>) timeSlots.clone();
+		System.out.println("-----------------------------------------------------");
+		System.out.println("CRITICAL PATH: "+printPath(criticalPath));
+		System.out.println("-----------------------------------------------------");
+		System.out.println(" Task              Host ");
+		System.out.println("------------------------");
+		SchedulleResponse sr = SchedulePathRecursive(criticalPath, currentSchedulle, currentTimeSlots);
+		if (sr.isSuccessful()){
+			System.out.println("------------------------");
+			System.out.println("CRITICAL PATH ESCALONADO");
+			System.out.println(printSchedule(sr.getSchedulle()));
+			for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
+				Task task = (Task) iterator.next();
+				schedulings.put(task, sr.getSchedulle().get(task));
+			}
+			updateChildrenESTs(criticalPath);
+		}else{
+			System.out.println("SCHEDDULE FAIL! TASK: "+sr.getFailTask().getLength());
+		}
+		return sr;
+	}
+	
+	
 
+
+	private SchedulleResponse SchedulePathRecursive(ArrayList<Task> cPath, HashMap<Task, Assignment> cSchedulle,HashMap<Host, ArrayList<TimeSlot>> ScheduletimeSlots) {
+		HashMap<Task, Assignment> bestSchedulle = null;
+		HashMap<Host, ArrayList<TimeSlot>> tslots = (HashMap<Host, ArrayList<TimeSlot>>)ScheduletimeSlots.clone();
+		ArrayList<Task> criticalPath = (ArrayList<Task>) cPath.clone();
+		HashMap<Task, Assignment> currentSchedulle = (HashMap<Task, Assignment>) cSchedulle.clone();
+		
+		SchedulleResponse sr = new SchedulleResponse();
+		sr.setSuccessful(true);
+		Task t = criticalPath.remove(0);
+		for (Host s : hosts) {
+			System.out.println(t.getLength()+"        "+s.getID());
+			long st = computeSTconstraints(t,s,currentSchedulle,tslots);
+			long c = computeC(t,s,currentSchedulle);
+			// na verdade os constraints devem ser passados para o computeST, constraints são limites inferiores para iniciar a simulação
+			sr = lookForChildrenDependencies(t,s,st);
+			if(sr.isSuccessful()){
+				currentSchedulle.put(t,new Assignment(s, st, c));
+				if(criticalPath.size()>0){
+					sr = SchedulePathRecursive(criticalPath, currentSchedulle, ScheduletimeSlots);
+				}else{
+					sr.setSchedulle(currentSchedulle);
+					System.out.println("Schedule found! :"+printSchedule(sr.getSchedulle()));
+				}
+				System.out.println("task "+t.getLength()+" Testing Schedule: ");
+				if(sr.getSchedulle()!=null){
+					if(bestSchedulle==null){
+						System.out.println("     best so far: "+printSchedule(sr.getSchedulle()));
+						bestSchedulle = (HashMap<Task, Assignment>) sr.getSchedulle().clone();					
+					}else{					
+						if(calculaCusto(sr.getSchedulle())<calculaCusto(bestSchedulle)){
+							System.out.println("   its the best! "+printSchedule(sr.getSchedulle()));
+							bestSchedulle = (HashMap<Task, Assignment>) sr.getSchedulle().clone();
+						}else{
+							System.out.println("     not the best");
+							System.out.println("         best one: "+calculaCusto(bestSchedulle));
+							System.out.println("          current: "+calculaCusto(sr.getSchedulle()));
+						}
+					}
+				} 
+				
+			}
+		}
+//		System.out.println(" task "+t.getLength()+" retornando bs: "+calculaCusto(bestSchedulle));
+		sr.setSchedulle(bestSchedulle);
+		return sr;
+	}
+	
+	private String printPath(ArrayList<Task> criticalPath) {
+		String s = "";
+		for (Task task : criticalPath) {
+			s+=" "+task.getLength();
+		}
+		return s;
+	}
+	
+	
+	private String printSchedule(HashMap<Task, Assignment> Schedulle){
+		Set<Task> keys = Schedulle.keySet();
+		String s = "     Task  Host"+"\n";
+		for (Task task : keys) {
+			s = s+"       "+task.getLength()+"  "+Schedulle.get(task).getHost().getID()+"\n";
+		}
+		s = s+"          custo: "+calculaCusto(Schedulle);
+		
+		return s;
+	}
+	
+	private long computeSTconstraints(Task t, Host s,HashMap<Task, Assignment> currentSchedulle, HashMap<Host, ArrayList<TimeSlot>> ScheduletimeSlots) {
+		boolean found = false;
+		long minST = estimateStartTimeConstraints(t,s,currentSchedulle);
+		long et = t.getLength()/s.getProcessingSpeed();
+		ArrayList<TimeSlot> slots = ScheduletimeSlots.get(s);
+		int i = 0;
+		while(!found && i<slots.size()){
+			TimeSlot slot = slots.get(i);
+			if(slot.getStartTime()<=minST){
+				if(slot.getFinishTime()==-1||slot.getFinishTime()>=minST+et){
+					found = true;
+					TimeSlot antes = new TimeSlot(slot.getStartTime(),minST);
+					TimeSlot depois = new TimeSlot(minST+et,slot.getFinishTime());
+					slots.remove(i);
+					if(depois.getFinishTime()-depois.getStartTime()!=0){
+						slots.add(depois);
+					}
+					if(antes.getFinishTime()-antes.getStartTime()!=0){
+						slots.add(antes);
+					}
+				} else{
+					i++;
+				}
+			}else{
+				if(slot.getFinishTime()==-1||slot.getFinishTime()-slot.getStartTime()>=et){
+					found = true;
+					TimeSlot depois = new TimeSlot(slot.getStartTime()+et,slot.getFinishTime());
+					slots.remove(i);
+					if(depois.getFinishTime()-depois.getStartTime()!=0){
+						slots.add(depois);
+					}
+					minST = slot.getStartTime();
+				} else{
+					i++;
+				}
+			}
+		}
+		return minST;
+	}
+	
+	private long estimateStartTimeConstraints(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
+		long maxEFT = 0;
+		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator
+				.hasNext();) {
+			Task parent = (Task) iterator.next();
+			if (schedulings.containsKey(parent)) {
+				Assignment assignment = schedulings.get(parent);
+				long eft = getFinishTime(parent,assignment);
+				if (maxEFT < eft) {
+					maxEFT = eft;
+				}
+			}else if(currentSchedulle.containsKey(parent)){
+				Assignment assignment = currentSchedulle.get(parent);
+				long eft = getFinishTime(parent,assignment);
+				if (maxEFT < eft) {
+					maxEFT = eft;
+				}
+			}
+		}
+		if(constraints.containsKey(t)){
+			if(maxEFT<constraints.get(t)){
+				maxEFT = constraints.get(t);
+			}	
+		}
+		return maxEFT;
+	}
+	
+	private SchedulleResponse lookForChildrenDependencies(Task t,Host s,long st){
+		SchedulleResponse sr = new SchedulleResponse();
+		sr.setSuccessful(true);
+		int i = 0;
+		long et = t.getLength() / s.getProcessingSpeed();
+		ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
+		while(sr.isSuccessful()&&i<childrenOfT.size()){
+		Task child = childrenOfT.get(i);
+		if (schedulings.containsKey(child)){						
+			if((st+et+(t.getLength()/bandwidth))>schedulings.get(child).getStartTime()){
+				sr.setFailTask(child);
+				sr.setSuggestedStartTime(st+et+(t.getLength()/bandwidth));
+				sr.setSuccessful(false);
+			}else{
+				sr.setSuccessful(true);
+			}
+		}
+		i++;
+		}
+		return sr;
+	}
+	
+	
+/*
 	private SchedulleResponse SchedulePath(ArrayList<Task> criticalPath) {
 		SchedulleResponse sr = new SchedulleResponse();
 		boolean scheduledFound = false;
@@ -281,22 +470,27 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		HashMap<Task, Assignment> currentSchedulle = new HashMap<Task, Assignment>();
 		
 		HashMap<Task, Integer> currentHostIndex = new HashMap<Task, Integer>();
-		/*
-		 * O currentHostIndex serve para saber quais os servicos que ja foram tentados para 
-		 * aquela tarefa (next untried service ti)
-		 */
+		
+		 // O currentHostIndex serve para saber quais os servicos que ja foram tentados para 
+		 // aquela tarefa (next untried service ti)
+		 
 		for (Iterator<Task> iterator = tasks.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
-			currentHostIndex.put(task, 0);
+			currentHostIndex.put(task, -1);
 		}
 		
 		
 		
 		int taskIndex = 0;
+		System.out.println("Task        Host");
+		System.out.println("-------------------------");
 		Task t = criticalPath.get(taskIndex);
-		while(t != null){
-			
+		while(taskIndex != -1){
+			currentHostIndex.put(t, currentHostIndex.get(t)+1);
 			int chi = currentHostIndex.get(t);
+			
+			
+			System.out.println(taskIndex+"                 "+chi);
 			
 			
 			if(chi >= hosts.size()||chi <0){
@@ -304,11 +498,14 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				//currentHostIndex.put(t, 0);// Será que tem que zerar mesmo? :P
 				//volta para a tarefa anterior
 				taskIndex--;
-				t = criticalPath.get(taskIndex);
+				if (taskIndex >=0 ){
+					t = criticalPath.get(taskIndex);
+				}
 			}else{
 				Host s = hosts.get(currentHostIndex.get(t));
 				long st = computeST(t,s,currentSchedulle);
 				long c = computeC(t,s);
+				// na verdade os constraints devem ser passados para o computeST, constraints são limites inferiores para iniciar a simulação
 				if(constraints.containsKey(t)){
 					if(st<constraints.get(t));{
 						st = constraints.get(t);
@@ -322,7 +519,6 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 					Task child = childrenOfT.get(i);
 					if (schedulings.containsKey(child)){						
 						if((st+et+(t.getLength()/bandwidth))>schedulings.get(child).getStartTime()){
-							currentHostIndex.put(t, currentHostIndex.get(t)+1);
 							possible=false;
 							sr.setFailTask(child);
 							sr.setSuggestedStartTime(st+et+(t.getLength()/bandwidth));
@@ -339,12 +535,16 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 							bestSchedulle = (HashMap<Task, Assignment>) currentSchedulle.clone();
 							//será q nao deveria voltar em todo caso? nao apenas se fosse melhor q o best schedulle?
 							taskIndex--;
-							t = criticalPath.get(taskIndex);
+							if (taskIndex >=0 ){
+								t = criticalPath.get(taskIndex);
+							}
 						}else{
 							if(calculaCusto(currentSchedulle)<calculaCusto(bestSchedulle)){
 								bestSchedulle = (HashMap<Task, Assignment>) currentSchedulle.clone();
 								taskIndex--;
-								t = criticalPath.get(taskIndex);
+								if (taskIndex >=0 ){
+									t = criticalPath.get(taskIndex);
+								}
 							}
 						}
 					}else{
@@ -353,7 +553,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 					}
 				}else{
 					taskIndex--;
-					t = criticalPath.get(taskIndex);
+					if (taskIndex >=0 ){
+						t = criticalPath.get(taskIndex);
+					}
 				}
 			}
 		}
@@ -372,7 +574,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 		
 	}
-
+*/
 	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
 		for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
@@ -407,7 +609,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return children;
 	}
 
-	private long computeC(Task t, Host s) {
+	private long computeC(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
 		long exCost = (long) (t.getLength()*s.getCost());
 		long parentsTransferCost = 0;
 		long childTransferCost = 0;
@@ -415,6 +617,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if(schedulings.containsKey(parent)){
+				if(schedulings.get(parent).getHost().getID()!=s.getID())
+				parentsTransferCost += parent.getLength()*transmissionCost;
+			} else if(currentSchedulle.containsKey(parent)){
+				if(currentSchedulle.get(parent).getHost().getID()!=s.getID())
 				parentsTransferCost += parent.getLength()*transmissionCost;
 			}
 		}

@@ -1,5 +1,7 @@
 package br.unicamp.ic.wfscheduler.impl.pcp;
 
+import java.util.HashMap;
+
 import br.unicamp.ic.wfscheduler.Task;
 
 
@@ -9,18 +11,20 @@ public class SchedulleResponse {
 	private Task failTask;
 	private long suggestedStartTime;
 	private boolean successful;
+	private HashMap<Task, Assignment> schedulle;
 	
 	
-	
-	public SchedulleResponse(Task failTask, long suggestedStartTime,
-			boolean successful) {
-		super();
-		this.failTask = failTask;
-		this.suggestedStartTime = suggestedStartTime;
-		this.successful = successful;
+		public HashMap<Task, Assignment> getSchedulle() {
+		return schedulle;
 	}
+
+	public void setSchedulle(HashMap<Task, Assignment> schedulle) {
+		this.schedulle = schedulle;
+	}
+
 	public SchedulleResponse() {
 		super();
+		schedulle = null;
 	//	this.failTask = null;
 		//this.suggestedStartTime =  -1;
 		//this.successful = (Boolean) null;
