@@ -8,10 +8,12 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 
 class Datacenter extends org.cloudbus.cloudsim.Datacenter
 {
+	static final double MinTimeSpan = 0.0000001;
 	static final int TRANSMISSION_EVENT = 5000;
 	
 	private BrokerImpl broker;
@@ -68,6 +70,31 @@ class Datacenter extends org.cloudbus.cloudsim.Datacenter
 			
 			default:
 				break;
+		}
+	}
+	
+	@Override
+	protected void updateCloudletProcessing() {
+		//Log.printLine(CloudSim.clock()+": PowerDatacenter #"+this.get_id()+": updating cloudlet processing.......................................");
+		//if some time passed since last processing
+		if (CloudSim.clock() > this.getLastProcessTime()) {
+			List<? extends Host> list = getVmAllocationPolicy().getHostList();
+			double smallerTime = Double.MAX_VALUE;
+			//for each host...
+			for (int i = 0; i < list.size(); i++) {
+				Host host = list.get(i);
+				double time = host.updateVmsProcessing(CloudSim.clock());//inform VMs to update processing
+				//what time do we expect that the next cloudlet will finish?
+				if (time < smallerTime) {
+					smallerTime = time;
+				}
+			}
+			//schedules an event to the next time, if valid
+			//if (smallerTime > CloudSim.clock() + 0.01 && smallerTime != Double.MAX_VALUE && smallerTime < getSchedulingInterval()) {
+			if (smallerTime >= CloudSim.clock() + MinTimeSpan && smallerTime != Double.MAX_VALUE) {
+				schedule(getId(), (smallerTime - CloudSim.clock()), CloudSimTags.VM_DATACENTER_EVENT);
+			}
+			setLastProcessTime(CloudSim.clock());
 		}
 	}
 }

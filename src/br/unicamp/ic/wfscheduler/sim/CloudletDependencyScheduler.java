@@ -80,12 +80,19 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 	double growCloudletForDependency(TaskImpl task, Cloudlet cl)
 	{
 		double nextEvent = Double.MAX_VALUE;
+		double currentTime = CloudSim.clock();
 		// verify for dependencies		
 		double expectedTransmissionFinishedTime = Math.abs(task.getDependencyReadyTime());
 		
-		// if is there dependencies
-		if (expectedTransmissionFinishedTime > 0)
+		// if transmission should finished by now, let's wait a little bit more
+		if (expectedTransmissionFinishedTime == CloudSim.clock())
 		{
+			expectedTransmissionFinishedTime += Datacenter.MinTimeSpan;
+		}
+		
+		// if is there dependencies
+		if (expectedTransmissionFinishedTime > currentTime)
+		{			
 			nextEvent = expectedTransmissionFinishedTime;
 		
 			// grow task so it'll consider transmission time
@@ -129,7 +136,7 @@ public class CloudletDependencyScheduler extends CloudletScheduler
 			
 			rcl.updateCloudletFinishedSoFar((long) (capacity * timeSpam * rcl.getPesNumber()));
 			
-			Math.min(growCloudletForDependency(task, rcl.getCloudlet()), nextEvent);			
+			nextEvent = Math.min(growCloudletForDependency(task, rcl.getCloudlet()), nextEvent);			
 		
 			if (rcl.getRemainingCloudletLength() == 0.0) 
 			{
