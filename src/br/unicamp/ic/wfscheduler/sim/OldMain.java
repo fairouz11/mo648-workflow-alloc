@@ -76,8 +76,8 @@ public class OldMain {
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		
 		hosts.add(new Host(1000, 1,0.1));
-		hosts.add(new Host(1000, 1,0.1));
-		hosts.add(new Host(1000, 1,0.1));
+		hosts.add(new Host(1000, 1,0.01));
+		hosts.add(new Host(1000, 1,0.01));
 		hosts.add(new Host(1000, 1,0.1));
 		
 		Task t1 = new Task(20001,10000);
@@ -89,8 +89,8 @@ public class OldMain {
 		Task t7 = new Task(20007,10000);
 		Task t8 = new Task(20008,10000);
 		Task t9 = new Task(60009,20000);
-		Task tentry = new Task(0,0);
-		Task texit = new Task(0,0);
+//		Task tentry = new Task(0,0);
+//		Task texit = new Task(0,0);
 		
 		t9.addDependencies(t8);
 		t9.addDependencies(t6);
@@ -101,14 +101,14 @@ public class OldMain {
 		t6.addDependencies(t2);
 		t5.addDependencies(t2);
 		t4.addDependencies(t1);
-		t3.addDependencies(tentry);
-		t2.addDependencies(tentry);
-		t1.addDependencies(tentry);
-		texit.addDependencies(t9);
-		texit.addDependencies(t8);
-		texit.addDependencies(t7);
+//		t3.addDependencies(tentry);
+//		t2.addDependencies(tentry);
+//		t1.addDependencies(tentry);
+//		texit.addDependencies(t9);
+//		texit.addDependencies(t8);
+//		texit.addDependencies(t7);
 		
-		tasks.add(tentry);
+//		tasks.add(tentry);
 		tasks.add(t1);
 		tasks.add(t2);
 		tasks.add(t3);
@@ -118,10 +118,12 @@ public class OldMain {
 		tasks.add(t7);
 		tasks.add(t8);
 		tasks.add(t9);
-		tasks.add(texit);
+//		tasks.add(texit);
 		
+		double deadline = 100000000;
 		CloudSim.init(1, Calendar.getInstance(), false);
-		return new BrokerImpl(hosts, tasks, bandwidth, processingCost, scheduler);
+		return new BrokerImpl(hosts, tasks, bandwidth, deadline, scheduler);
+		//return new BrokerImpl(hosts, tasks, bandwidth, processingCost, scheduler);
 	}
 
 

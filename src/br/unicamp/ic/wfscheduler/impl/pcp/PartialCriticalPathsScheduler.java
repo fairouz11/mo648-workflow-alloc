@@ -22,7 +22,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private HashMap<Task, ArrayList<Task>> paisTerminados;
 	private HashMap<Task, ArrayList<Task>> childrenOf;
 	private HashMap<Task, Long> constraints;
-	private long deadline = 100000000;
+	private double deadline;
 	private HashMap<Task, Long> METs;
 	private HashMap<Task, Long> MTTs;
 	private HashMap<Task, Long> ESTs;
@@ -34,16 +34,57 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		paisTerminados = new HashMap<Task, ArrayList<Task>>();
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
-		calculaTodosOsFilhos();
-	//	imprimefilhos();
 		bandwidth = broker.getBandwidth();
-		//deadline = (long) broker.getDeadline();
+		deadline = broker.getDeadline();
 		transmissionCost = 0;
 		this.broker = broker;
-		scheduleWorkflow();
-		
-		broker.assign(tasks.get(0),hosts.get(0));
-		System.out.println(printSchedule(schedulings));
+		if(scheduleWorkflow()){
+			calculaTodosOsFilhos();
+			imprimefilhos();
+			System.out.println(printSchedule(schedulings));
+			assignNonDependentTasks();
+		}else{
+			System.out.println("--------------------------------------");
+			System.out.println("IMPOSSIVEL ESCALONAR COM ESSE DEADLINE");
+			System.out.println("--------------------------------------");
+		}
+ 
+
+	}
+
+
+	private void assignNonDependentTasks() {
+		ArrayList<Task> noDependecies = new ArrayList<Task>();
+		for (Task task : tasks) {
+			if (!task.hasDependencies()){
+				noDependecies.add(task);
+			}
+		}
+		ArrayList<TaskAssigned> tas = new ArrayList<TaskAssigned>();
+		for (Task tfree : noDependecies) {
+			TaskAssigned ta = new TaskAssigned(tfree, schedulings.get(tfree));
+			tas.add(ta);
+		}
+		Collections.sort(tas,assgnmentsComparator);
+		for (TaskAssigned taskAssigned : tas) {
+			Task t = taskAssigned.getTask();
+			ArrayList<Host> trans = new ArrayList<Host>();
+			trans.add(schedulings.get(t).getHost());
+			broker.assign(t, schedulings.get(t).getHost());			
+		}
+	}
+
+
+	private void eliminateEntryAndExit(Task entry, Task exit) {
+		for (Task task : tasks) {
+			if(task.getDependencies().contains(entry)){
+				task.getDependencies().remove((entry));
+			}
+		}
+		tasks.remove(entry);
+		tasks.remove(exit);
+		schedulings.remove(entry);
+		schedulings.remove(exit);
 	}
 
 
@@ -207,8 +248,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 
-	private List<Task> addingTasksEntryAndExit(List<Task> tasks, Task entry,
-			Task exit) {
+	private void addingTasksEntryAndExit(Task entry,Task exit) {
 
 		ArrayList<Task> semDependencias = new ArrayList<Task>();
 		ArrayList<Task> naoEhDependencia = new ArrayList<Task>();
@@ -243,7 +283,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 			Task task = (Task) iterator.next();
 			exit.getDependencies().add(task);
 		}
-		return tasks;
+		
+		tasks.add(entry);
+		tasks.add(exit);
 	}
 
 	private boolean scheduleWorkflow() {
@@ -259,20 +301,25 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		
 	//Além disso, tem que ver se tem problema alocar as 2 tarefas vazias a qualquer host.
 		
-	//	Task entry = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
-	//	Task exit = (Task) new br.unicamp.ic.wfscheduler.sim.input.Task(0, 0);
-	//	tasks = addingTasksEntryAndExit(tasks, entry, exit);
-	//	schedulings.put(entry, new Assignment(null,(long) 0,(long) 0));
-		schedulings.put(tasks.get(0), new Assignment(hosts.get(0),(long) 0,(long) 0));
-	//	schedulings.put(exit, new Assignment(null,(long) deadline,(long) 0));
-		schedulings.put(tasks.get(tasks.size()-1), new Assignment(hosts.get(0),deadline,(long) 0));
+		Task entry = new DummyTask();
+		Task exit = new DummyTask();
+
+		addingTasksEntryAndExit(entry, exit);
+		schedulings.put(entry, new Assignment(null,(long) 0,(long) 0));
+	//	schedulings.put(tasks.get(0), new Assignment(hosts.get(0),(long) 0,(long) 0));
+		schedulings.put(exit, new Assignment(null,(long) deadline,(long) 0));
+		
+		//schedulings.put(tasks.get(tasks.size()-1), new Assignment(hosts.get(0),deadline,(long) 0));
 		constraints = new HashMap<Task, Long>();
-		estimateEarliestStartTime(tasks.get(tasks.size()-1), hosts);// apenas para calcular o partial critical path atual
+		//estimateEarliestStartTime(tasks.get(tasks.size()-1), hosts);// apenas para calcular o partial critical path atual
+		estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
 		initializeTimeSlots();
-		if (ScheduleParents(tasks.get(tasks.size()-1)).isSuccessful()) {
+		calculaTodosOsFilhos();
+		imprimefilhos();
+		if (ScheduleParents(exit).isSuccessful()) {
 			sucesso = true;
-			System.out.println(schedulings.toString());
 		}
+		eliminateEntryAndExit(entry,exit);
 		return sucesso;
 	}
 
