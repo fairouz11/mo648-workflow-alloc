@@ -92,7 +92,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		childrenOf = new HashMap<Task, ArrayList<Task>>();
 		for (Task task : tasks) {
 			for (Task parent : task.getDependencies()) {
-				ArrayList filhos = childrenOf.get(parent);
+				ArrayList<Task> filhos = childrenOf.get(parent);
 				if(filhos==null){
 					filhos = new ArrayList<Task>();
 				}
