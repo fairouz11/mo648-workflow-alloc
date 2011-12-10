@@ -111,39 +111,41 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		ArrayList<Task> cs = childrenOf.get(task);
 		ArrayList<TaskAssigned> childrenAssigned = new ArrayList<TaskAssigned>();
 		
-		for (Task c : cs) {
-			TaskAssigned ta = new TaskAssigned(c, schedulings.get(c));
-			childrenAssigned.add(ta);
-		}
-		Collections.sort(childrenAssigned,assgnmentsComparator);
-		
-		
-		for (TaskAssigned childAssigned : childrenAssigned){
-			Task child = childAssigned.getTask();
-			ArrayList<Task> paisFinished;
-			if(paisTerminados.containsKey(child)){
-				paisFinished = paisTerminados.get(child);
-			}else{
-				paisFinished = new ArrayList<Task>();
+		if(cs!=null){
+			for (Task c : cs) {
+				TaskAssigned ta = new TaskAssigned(c, schedulings.get(c));
+				childrenAssigned.add(ta);
 			}
-			paisFinished.add(task);
-			paisTerminados.put(child,paisFinished);
-			boolean todosOsPaisTerminados = true;
-			for (Task dep : child.getDependencies()) {
-				if(!paisTerminados.get(child).contains(dep)){
-					todosOsPaisTerminados =false;
+			Collections.sort(childrenAssigned,assgnmentsComparator);
+		
+		
+			for (TaskAssigned childAssigned : childrenAssigned){
+				Task child = childAssigned.getTask();
+				ArrayList<Task> paisFinished;
+				if(paisTerminados.containsKey(child)){
+					paisFinished = paisTerminados.get(child);
+				}else{
+					paisFinished = new ArrayList<Task>();
 				}
-			}
-			if(todosOsPaisTerminados){
-				System.out.println("     TAREFA LIBERADA: "+child.getID());
-				ArrayList<Host> trans = new ArrayList<Host>();
-				trans.add(schedulings.get(child).getHost());
-				
-				broker.assign(child, schedulings.get(child).getHost());
+				paisFinished.add(task);
+				paisTerminados.put(child,paisFinished);
+				boolean todosOsPaisTerminados = true;
 				for (Task dep : child.getDependencies()) {
-					broker.transmitResult(dep, trans);	
+					if(!paisTerminados.get(child).contains(dep)){
+						todosOsPaisTerminados =false;
+					}
 				}
+				if(todosOsPaisTerminados){
+					System.out.println("     TAREFA LIBERADA: "+child.getID());
+					ArrayList<Host> trans = new ArrayList<Host>();
+					trans.add(schedulings.get(child).getHost());
+				
+					broker.assign(child, schedulings.get(child).getHost());
+					for 	(Task dep : child.getDependencies()) {
+						broker.transmitResult(dep, trans);	
+					}	
 
+				}
 			}
 		}
 	}
