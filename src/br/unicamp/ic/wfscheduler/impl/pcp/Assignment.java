@@ -1,4 +1,7 @@
 package br.unicamp.ic.wfscheduler.impl.pcp;
+import java.util.ArrayList;
+import java.util.Comparator;
+
 import br.unicamp.ic.wfscheduler.*;
 
 public class Assignment {
@@ -31,6 +34,17 @@ public class Assignment {
 		this.cost = cost;
 	}
 	
+	 
+	  
+	 
+        
+          
+
+	
+	
+	public ArrayList<Assignment> ordenaAssignments(ArrayList<Assignment> assignments){
+		return null;
+	}
 	
 	
 	

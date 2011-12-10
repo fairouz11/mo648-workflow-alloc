@@ -76,9 +76,9 @@ public class OldMain {
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		
 		hosts.add(new Host(1000, 1,0.1));
-		hosts.add(new Host(1000, 1,0.2));
-		hosts.add(new Host(1000, 1,0.3));
-		hosts.add(new Host(1000, 1,0.4));
+		hosts.add(new Host(1000, 1,0.1));
+		hosts.add(new Host(1000, 1,0.1));
+		hosts.add(new Host(1000, 1,0.1));
 		
 		Task t1 = new Task(20001,10000);
 		Task t2 = new Task(60002,20000);

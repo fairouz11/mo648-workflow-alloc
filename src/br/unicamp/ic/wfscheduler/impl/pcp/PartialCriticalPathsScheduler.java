@@ -3,6 +3,8 @@ package br.unicamp.ic.wfscheduler.impl.pcp;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,11 +15,12 @@ import br.unicamp.ic.wfscheduler.*;
 public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
 	private List<Host> hosts;
+	private Broker broker;
 	private long bandwidth;
 	private long transmissionCost;
-
-	
 	private HashMap<Task, Assignment> schedulings;
+	private HashMap<Task, ArrayList<Task>> paisTerminados;
+	private HashMap<Task, ArrayList<Task>> childrenOf;
 	private HashMap<Task, Long> constraints;
 	private long deadline = 100000000;
 	private HashMap<Task, Long> METs;
@@ -28,19 +31,80 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	
 	@Override
 	public void startScheduler(Broker broker) {
+		paisTerminados = new HashMap<Task, ArrayList<Task>>();
 		tasks = broker.getTasks();
 		hosts = broker.getHosts();
+		calculaTodosOsFilhos();
+	//	imprimefilhos();
 		bandwidth = broker.getBandwidth();
 		//deadline = (long) broker.getDeadline();
 		transmissionCost = 0;
-		
+		this.broker = broker;
 		scheduleWorkflow();
+		
+		broker.assign(tasks.get(0),hosts.get(0));
+		System.out.println(printSchedule(schedulings));
 	}
-	
+
+
+	private void calculaTodosOsFilhos() {
+		childrenOf = new HashMap<Task, ArrayList<Task>>();
+		for (Task task : tasks) {
+			for (Task parent : task.getDependencies()) {
+				ArrayList filhos = childrenOf.get(parent);
+				if(filhos==null){
+					filhos = new ArrayList<Task>();
+				}
+				filhos.add(task);
+				childrenOf.put(parent, filhos);
+			}
+		}
+	}
+
+
 	@Override
 	public void taskFinished(Task task, Host host)
 	{
-		// TODO Auto-generated method stub	
+		System.out.println("TAREFA FINALIZADA: "+task.getID());
+		//ArrayList<Host> hosts = new ArrayList<Host>();
+		ArrayList<Task> cs = childrenOf.get(task);
+		ArrayList<TaskAssigned> childrenAssigned = new ArrayList<TaskAssigned>();
+		
+		for (Task c : cs) {
+			TaskAssigned ta = new TaskAssigned(c, schedulings.get(c));
+			childrenAssigned.add(ta);
+		}
+		Collections.sort(childrenAssigned,assgnmentsComparator);
+		
+		
+		for (TaskAssigned childAssigned : childrenAssigned){
+			Task child = childAssigned.getTask();
+			ArrayList<Task> paisFinished;
+			if(paisTerminados.containsKey(child)){
+				paisFinished = paisTerminados.get(child);
+			}else{
+				paisFinished = new ArrayList<Task>();
+			}
+			paisFinished.add(task);
+			paisTerminados.put(child,paisFinished);
+			boolean todosOsPaisTerminados = true;
+			for (Task dep : child.getDependencies()) {
+				if(!paisTerminados.get(child).contains(dep)){
+					todosOsPaisTerminados =false;
+				}
+			}
+			if(todosOsPaisTerminados){
+				System.out.println("     TAREFA LIBERADA: "+child.getID());
+				ArrayList<Host> trans = new ArrayList<Host>();
+				trans.add(schedulings.get(child).getHost());
+				
+				broker.assign(child, schedulings.get(child).getHost());
+				for (Task dep : child.getDependencies()) {
+					broker.transmitResult(dep, trans);	
+				}
+
+			}
+		}
 	}
 
 	@Override
@@ -444,7 +508,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		sr.setSuccessful(true);
 		int i = 0;
 		long et = t.getLength() / s.getProcessingSpeed();
-		ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
+		ArrayList<Task> childrenOfT = childrenOf.get(t);
+		//ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
 		while(sr.isSuccessful()&&i<childrenOfT.size()){
 		Task child = childrenOfT.get(i);
 		if (schedulings.containsKey(child)){						
@@ -575,11 +640,13 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		
 	}
 */
+	
 	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
 		for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
 			//long ft = getFinishTime(task, schedulings.get(task));
-			ArrayList<Task> children = lookForAllchildrenOfT(task);
+			ArrayList<Task> children = childrenOf.get(task);
+			//ArrayList<Task> children = lookForAllchildrenOfT(task);
 			for (Iterator<Task> iterator2 = children.iterator(); iterator2.hasNext();) {
 				Task child = (Task) iterator2.next();
 				if(!schedulings.containsKey(child)){
@@ -598,7 +665,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return cost;
 	}
 
-	private ArrayList<Task> lookForAllchildrenOfT(Task t) {
+/*	private ArrayList<Task> lookForAllchildrenOfT(Task t) {
 		ArrayList<Task> children = new ArrayList<Task>();
 		for (Iterator<Task> iterator = tasks.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
@@ -608,7 +675,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 		return children;
 	}
-
+*/
 	private long computeC(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
 		long exCost = (long) (t.getLength()*s.getCost());
 		long parentsTransferCost = 0;
@@ -624,7 +691,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				parentsTransferCost += parent.getLength()*transmissionCost;
 			}
 		}
-		ArrayList<Task> children = lookForAllchildrenOfT(t);
+		ArrayList<Task> children = childrenOf.get(t);
+		//ArrayList<Task> children = lookForAllchildrenOfT(t);
 		for (Iterator<Task> iterator = children.iterator(); iterator.hasNext();) {
 			Task child = (Task) iterator.next();
 			if(schedulings.containsKey(child)){
@@ -718,6 +786,37 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return hasUnscheduledParents;
 	}
 
+	
+	Comparator<TaskAssigned> assgnmentsComparator = new Comparator<TaskAssigned>() {
+		
+		@Override
+		public int compare(TaskAssigned o1, TaskAssigned o2) {
+			if(o1.getAssignment().getStartTime()<o2.getAssignment().getStartTime()) return -1;
+			else if(o1.getAssignment().getStartTime()>o2.getAssignment().getStartTime()) return 1;
+			else return 0;
+		}
+	};
+	private void imprimefilhos(){
+		Set<Task> ts = childrenOf.keySet();
+		for (Task task : ts) {
+			System.out.println("Task:"+task.getLength());
+			System.out.println("  Filhos:");
+			ArrayList<Task> filhos = childrenOf.get(task);
+			for (Task task2 : filhos) {
+				System.out.println("           "+task2.getLength());
+			}
+		}
+		
+	}
+	
+/*	private void createTaskAssignments() {
+		taskAssigneds = new ArrayList<TaskAssigned>();
+		Set<Task> ts = schedulings.keySet();
+		for (Task task : ts) {
+			TaskAssigned ta = new TaskAssigned(task, schedulings.get(task));
+		}
+		Collections.sort(taskAssigneds,assgnmentsComparator);
+	}*/
 
 
 }
