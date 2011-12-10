@@ -138,8 +138,9 @@ do
         echo "Core$1 running $wf.$x"
    	./run.sh $datacenter $indir$wf $execout $algorithm $deadline
 
-        cost=$(sed -n "2p" $execout)
-        time=$(sed -n "3p" $execout)
+        # convert scientific notation (bc doesn't get it right otherwise)
+        cost=$(sed -n "2p" $execout | sed "s/E/\*10\^/")
+        time=$(sed -n "3p" $execout | sed "s/E/\*10\^/")
         
         echo -e "$cost\\t$time" >> $fout
         rm -f $execout
