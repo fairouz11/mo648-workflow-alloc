@@ -47,7 +47,7 @@ class TaskImpl implements Task
 	 */
 	double calculateProcessingCost(HostImpl h)
 	{
-		return this.getLength() * h.getCost();
+		return this.cloudlet.getCloudletLength() * h.getCost();
 	}
 	
 	/**
@@ -174,7 +174,7 @@ class TaskImpl implements Task
 	@Override
 	public long getLength()
 	{
-		return cloudlet.getCloudletLength();
+		return initialLength;
 	}
 
 	@Override
