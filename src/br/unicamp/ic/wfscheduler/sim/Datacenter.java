@@ -13,7 +13,7 @@ import org.cloudbus.cloudsim.core.SimEvent;
 
 class Datacenter extends org.cloudbus.cloudsim.Datacenter
 {
-	static final double MinTimeSpan = 0.0000001;
+	static final double MinTimeSpan = 1e-30;
 	static final int TRANSMISSION_EVENT = 5000;
 	
 	private BrokerImpl broker;
