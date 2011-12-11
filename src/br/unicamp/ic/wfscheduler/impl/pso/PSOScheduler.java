@@ -18,7 +18,7 @@ public class PSOScheduler implements IScheduler
 	 * Attributes
 	 */
 	// total number of particles in the swarm
-	private static final int SWARM_SIZE = 15;
+	private static final int SWARM_SIZE = 20;
 	
 	// number of iterations of the PSO
 	private static final int MAX_ITERATION = 30;
@@ -62,7 +62,6 @@ public class PSOScheduler implements IScheduler
 	private Broker broker;
 	private List<Task> finishedTasks;
 	private ArrayList<Task> unscheduledTasks;
-	private ArrayList<Task> readyTasks;
 	private ArrayList<Integer> number_dependencies;
 	
 	private boolean flag;
@@ -154,8 +153,9 @@ public class PSOScheduler implements IScheduler
 	 * assign() function: assign the mapped tasks to the respective hosts
 	 * and dispatch them to execution.
 	 */
-	private void assign()
+	private void assign(List<Task> readyTasks)
 	{	
+			
 		ArrayList<Host> trans = new ArrayList<Host>();
 		
 		for(Task t : readyTasks)
@@ -168,6 +168,7 @@ public class PSOScheduler implements IScheduler
 				}
 			}
 			
+			
 			broker.assign(t, host);
 			
 			// now, we have to transmit the dependencies to this host
@@ -178,11 +179,12 @@ public class PSOScheduler implements IScheduler
 				broker.transmitResult(dep, trans);
 
 			trans.clear();
-					
+			
 			unscheduledTasks.remove(unscheduledTasks.indexOf(t));
 		}
 		
 		readyTasks.clear();
+		
 		flag = true;
 	}
 	
@@ -191,7 +193,7 @@ public class PSOScheduler implements IScheduler
 	 * whose parents have completed execution and have provided the files necessary
 	 * for the task's execution.
 	 */
-	private void calc_dependencies()
+	private void calc_dependencies(List<Task> readTasks)
 	{
 		for(Task t_unscheduled : unscheduledTasks)
 		{	
@@ -207,7 +209,7 @@ public class PSOScheduler implements IScheduler
 			}
 			
 			if(number_dependencies.get(t_unscheduled.getID()) == t_unscheduled.getDependencies().size()){
-				readyTasks.add(t_unscheduled);
+				readTasks.add(t_unscheduled);
 			}
 			else{
 				number_dependencies.set(t_unscheduled.getID(), 0);
@@ -235,7 +237,7 @@ public class PSOScheduler implements IScheduler
 		 */
 		
 		//Initialize the readyTasks vector with the list of all tasks
-		readyTasks = new ArrayList<Task>(tasks);
+		ArrayList<Task> readyTasks = new ArrayList<Task>(tasks);
 		
 		//Initialize the unscheduledTasks vector with the list of all tasks
 		unscheduledTasks = new ArrayList<Task>(tasks);
@@ -262,7 +264,7 @@ public class PSOScheduler implements IScheduler
 		readyTasks.clear();
 		readyTasks.addAll(aux);
 		
-		assign();
+		assign(readyTasks);
 		
 	}
 	
@@ -535,13 +537,15 @@ public class PSOScheduler implements IScheduler
 			finishedTasks.add(task);
 		}
 		
-		calc_dependencies();
+		ArrayList<Task> readTasks = new ArrayList<Task>();
 		
-		if((readyTasks.size() > 0) && (flag==true))
+		calc_dependencies(readTasks);
+		
+		if( readTasks.size() > 0 && (flag==true))
 		{
 			flag = false;
-			PSO_Algorithm(readyTasks);
-			assign();
+			PSO_Algorithm(readTasks);
+			assign(readTasks);
 		}
 	}
 }
