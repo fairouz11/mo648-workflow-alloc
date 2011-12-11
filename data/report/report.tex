@@ -69,8 +69,8 @@ nuvem híbridas dentro do deadline estipulado minimizando o custo monetário.
 
 \section{Objetivo do projeto}
 
-Este projeto teve como objetivo comparar diferentes algoritmos de escalonamento 
-para redes híbidas. Foram implementados quarto algoritmos: \emph{escalonador aleatório}, \emph{round robin},
+Este projeto teve como objetivo comparar diferentes algorítmos de escalonamento 
+para redes híbidas. Foram implementados quatro algoritmos: \emph{escalonador aleatório}, \emph{round robin},
 \emph{cost-driven scheduling using partial critial paths} e \emph{algoritmo de otimização por nuvem de partículas}.
 Os algoritmos são descritos na próxima seção.
 
@@ -79,7 +79,7 @@ Os algoritmos são descritos na próxima seção.
 
 \subsection{Algoritmo Aleatório}
 
-O algoritmo baseia-se na alocação aleatória de recursos para o processamento de tarefas do workflow.
+O algorítmo baseia-se na alocação aleatória de recursos para o processamento de tarefas do workflow.
 
 Este escalonador realiza os seguintes passos:
 
@@ -229,15 +229,14 @@ autores do artigo, pode ser visto nos passos abaixo:\\
 
 \subsubsection{Explicação do PSO}
 
-O algoritmo inicia com a inicialização aleatória da posição e velocidade das partículas. Neste projeto, 
-cada partícula representa uma lista das tarefas a serem atribuídas e a dimensão de cada partícula 
-representa o número de tarefas no workflow.\\
+O algoritmo começa com a inicialização aleatória da posição e velocidade das partículas. Neste projeto, 
+cada partícula representa um mapeamento tarefa-máquina, onde cada tarefa \emph{i} ($0 \leq i < \text{número de tarefas}$) representa uma dimensão da partícula
+e cada dimensão recebe valores inteiros, onde cada um desses valores representa o ID da máquina para qual a tarefa $i$ deve ser atribuída.\\
 
-O valor atribuído a cada dimensão das partículas são os identificadores dos recursos (valores inteiros). Deste modo, 
-uma partícula representa um mapeamento de uma tarefa para uma máquina. No nosso problema, por exemplo, se o 
-algoritmo receber como entrada um workflow com 5 tarefas, cada partícula terá 5 dimensões, que poderão variar 
-a medida que o algoritmo é executado. O conteúdo de cada dimensão $i$ da partícula, ($0 \leq i < \text{número de máquinas}$), 
-é o identificador da máquina para a qual a tarefa $i$ foi atribuída. Por exemplo, uma partícula no nosso algoritmo, 
+Deste modo, uma partícula \emph{p} representa um mapeamento de uma tarefa para uma máquina. No nosso problema, por exemplo, se o 
+algoritmo receber como entrada um workflow com 5 tarefas, cada partícula, na primeira chamada do PSO, terá 5 dimensões, que poderão variar 
+a medida que o algoritmo é executado. O conteúdo de cada dimensão $i$ da partícula, ($0 \leq i < \text{número de tarefas}$), 
+é o identificador(ID) da máquina para a qual a tarefa $i$ deve ser atribuída. Por exemplo, uma partícula inicial no nosso algoritmo, 
 pode ser melhor ilustrada na Figura \eqref{particula}.\\
 
 \begin{figure}[!htb]
@@ -249,7 +248,7 @@ pode ser melhor ilustrada na Figura \eqref{particula}.\\
 
 \subsubsection{Explicação da heurística de escalonamento}
 
-A heurística de escalonamento apresentada pelos autores do artigo, pode ser resumida nos passos
+A heurística de escalonamento apresentada pelos autores do artigo, utiliza como recurso principal o PSO e pode ser resumida nos passos
 apresentados logo abaixo:\\
 
 \begin{description}
@@ -273,7 +272,11 @@ existentes entre as tarefas(passo 3: Compute PSO((allTasks)). Este mapeamento ot
 Para validar as dependências entre as tarefas, o algoritmo atribui as tarefas prontas para os hosts de acordo com o 
 mapeamento dado pelo PSO (passo 5). Após despachar as tarefas para execução, o escalonador espera um determinado tempo, que
 os autores do artigo denominaram \emph{polling time}. Esse tempo é para o simulador adquirir o status das tarefas.
-Na nossa simulação, o algoritmo PSO é notificado pelo cloudsim todas as vezes que uma tarefa termina sua execução (passo 7).
+Na nossa simulação, ao invés de esperar um determinado tempo, o escalonador atribui as tarefas aos hosts e continua a sua execução, sendo
+avisado a qualquer momento pelo simulador(cloudsim) do término de uma tarefa. Todas as vezes que o escalonador é avisado do término de tarefas, 
+o algoritmo PSO é chamado para que a geração de um novo mapeamento tarefa-máquina seja gerado (passo 7). Desta forma, o algoritmo PSO tal como
+implementado pode ser denominado um algoritmo online.\\
+
 Dependendo da quantidade de tarefas finalizadas, a lista de tarefas prontas é atualizada, essa lista conterá todas as tarefas 
 cujos pais completaram sua execução e já transmitiram todos os arquivos necessários (passo 8). No passo 9, os autores 
 atualizam a matriz com os valores dos custos de comunicação entre os recursos pois, segundo o modelo implementado por eles, 
@@ -281,22 +284,32 @@ esses valores podem variar. No caso da nossa implementação, esses valores são
 no nosso projeto. No passo 10, o PSO é computado novamente para as tarefas que ainda não foram escalonadas. Os passos 6 a 10 
 são repetidos até que todas as tarefas do worflow estejam escalonadas.\\
 
+A Tabela abaixo mostra os valores utilizados na execução do algorítmo de escalonamento PSO. O número de execuções representa o número de 
+simulações independentes realizadas para cada workflow dado com entrada para o algorítmo para se calcular o Intervalo de Confiança dos resultados.\\
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[scale=.4]{figures/valuesPSO.eps}
+\caption{Valores utilizados no algoritmo PSO}
+\label{psoValues}
+\end{figure}
+
 \section{O simulador}
 
-Para realizar a comparação dos algoritmos, foi necessário utilziar um simulador de núvens. O simulador é
+Para realizar a comparação dos algorítmos, foi necessário utilizar um simulador de nuvens. O simulador é
 responsável por receber e tratar os pedidos de alocação de tarefas, bem como os pedidos de transmissão dos
 resultados de uma tarefa executada.
 
 Foi implementado um simulador que atendesse aos requisitos descritos anteriormente. A implementação baseou-se
-em um, já consolidado, simulador de núvens chamado \emph{cloudsim}\cite{cloudsim}.
+em um, já consolidado, simulador de nuvens chamado \emph{cloudsim}\cite{cloudsim}.
 
-As alterações feitas e decisões de projeto tomadas são descrita com detalhes abaixo.
+As alterações feitas e decisões de projeto tomadas são descritas com detalhes abaixo.
 
 \subsection{Arquitetura}
 
-A fim de que fosse possível testar um número variado de algoritmos e que a implementação do escalonador
+A fim de que fosse possível testar um número variado de algorítmos e que a implementação do escalonador
 não estivesse altamente acoplada ao funcionamento do simulador, decidimos adicionar uma camada de abstração
-ào projeto.
+ao projeto.
 
 Essa camada de abstração provê funcionalidades básicas ao implementador do escalonador, sem revelar como o
 simulador as implementa. Desta forma, é possível alterar o simulador subjacente sem alterar o código dos escalonadores,
@@ -317,7 +330,7 @@ Portanto, a arquitetura do projeto é como vista abaixo.
 ----------------------------------------------------------\\
              CAMADA DE ABSTRAÇÃO              \\
 ----------------------------------------------------------\\
-        SIMULADOR (COUDSIM MODIFICADO)        \\
+        SIMULADOR (CLOUDSIM MODIFICADO)        \\
 ----------------------------------------------------------\\
 \end{center}
 
@@ -382,7 +395,7 @@ e que foram implementados na nossa versão.
 
 Utilizamos o \emph{cloudsim}\footnote{http://www.cloudbus.org/cloudsim/} release 2.1.1 como base para as modificações.
  
-O simulador de núvens \emph{cloudsim} não serviu imediatamente ao nosso propósito. Algumas funcionalidades
+O simulador de nuvens \emph{cloudsim} não serviu imediatamente ao nosso propósito. Algumas funcionalidades
 não eram implementadas ou eram parcialmente implementadas:
 
 \begin{enumerate}
