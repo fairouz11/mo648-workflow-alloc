@@ -133,22 +133,22 @@ aleatório) apresentem melhor performance.
 
 (Descrever algorítmo)
 
-\subsection{Algoritmo de Otimização por Nuvem de Partículas}
+\subsection{Algorítmo de Otimização por Nuvem de Partículas}
 
 A solução para o problema de escalonamento, apresentada no artigo \cite{pso_a}, é baseada numa heurística 
 denominada \emph{Particle Swarm Optimization} (PSO) ou \emph{Otimização por Nuvem de Partículas}. A heurística de 
 escalonamento tem como objetivo otimizar 
 o custo do mapeamento tarefa-máquina baseada na solução dada pelo PSO. O processo de otimização utiliza 
-dois algoritmos principais: (a) A heurística de escalonamento e (b) Os passos do PSO 
-para otimização do mapeamento tarefa-máquina, listados em uma seção posterior. Antes de apresentar os algoritmos, vamos 
+dois algoritmos principais: (a) A heurística de escalonamento desenvolvida pelos autores e (b) Os passos do PSO 
+para otimização do mapeamento tarefa-máquina. Antes de apresentar os algoritmos, vamos 
 dar uma breve descrição do algoritmo PSO.
 
 \subsubsection{Particle Swarm Optimization - PSO}
 
-Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algoritmo originalmente 
+Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algorítmo originalmente 
 desenvolvido por Eberhart e Kennedy \cite{pso_article}. O PSO é inspirado na simulação do comportamento social de um 
 bando de pássaros em revoada, com movimento localmente aleatório, mas globalmente determinado. No PSO, 
-assim como em outros algoritmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
+assim como em outros algorítmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
 partículas, que em vez de utilizar operadores genéticos, evoluem através de cooperação e competição, entre si, 
 por diversas gerações. As partículas se beneficiam de sua própria experiência e da experiência de outros membros 
 do enxame durante a busca de um melhor fitness (alvo: comida, local para repouso, proteção de predadores, etc).
@@ -156,7 +156,7 @@ do enxame durante a busca de um melhor fitness (alvo: comida, local para repouso
 \subsubsection{Estrutura do PSO}
 
 O PSO é muito similar a algumas técnicas da computação evolucionária, como os algoritmos genéticos, onde o 
-sistema é inicializado com uma população de soluções randômicas. Entretanto, difere dessas outras técnicas 
+sistema é inicializado com uma população de soluções aleatórias. Entretanto, difere dessas outras técnicas 
 populacionais, pois nenhum operador inspirado pelos procedimentos de DNA, é aplicado na população, para obter 
 uma nova geração de indivíduos. Em vez de mutação, são utilizadas partículas, movendo-se em um espaço de busca 
 n-dimensional, sendo cada uma delas um solução potencial para o problema. Cada partícula possui também uma 
@@ -201,16 +201,18 @@ A Equação \eqref{velocidade} é usada para calcular a nova velocidade da part�
 anterior e as distâncias entre sua posição atual, sua melhor posição, e a melhor posição do grupo. 
 A partir daí a partícula muda para uma nova posição de acordo com a Equação \eqref{posicao}. O desempenho de cada 
 partícula é medido de acordo com uma função de aptidão pré-definida que é relacionada ao problema a ser 
-resolvido. No nosso caso, essa função de aptidão tenta minimizar os custos das alocações dos 
-recursos feitas em cada partícula.\\
+resolvido. No nosso problema, essa função de aptidão tenta minimizar os custos das alocações dos recursos 
+recursos feitas em cada partícula. No PSO, cada partícula representa uma possível solução para o problema.
+Cada uma dessas soluções é refinada através de n iterações; sendo escolhida, ao final, a melhor solução de todas,
+ou seja, a solução (\emph{fitness}) que possui o menor custo total.\\
 
 Cada partícula mantém o rastro de suas coordenadas no espaço-problema, que estão associadas à 
 melhor solução (\emph{fitness}) que ela tenha encontrado até então. O valor do fitness também é armazenado. 
-Esse valor é chamado de pbest. Outro valor que é rastreado é o melhor entre todos os valores, e sua posição, 
-obtido por qualquer partícula na população. Esse valor é chamado de gbest.\\
+Esse valor é chamado de \emph{pbest}. Outro valor que é rastreado é o melhor entre todos os valores, e sua posição, 
+obtido por qualquer partícula na população. Esse valor é chamado de \emph{gbest}.\\
 
 O conceito do PSO consiste a cada iteração, em mudança de velocidade, as partículas 
-alcancem suas posições de pbest e gbest. O algoritmo PSO, tal como descrito pelos 
+alcancem suas posições de \emph{pbest} e \emph{gbest}. O algoritmo PSO, tal como descrito pelos 
 autores do artigo, pode ser visto nos passos abaixo:\\
 
 \begin{description}
