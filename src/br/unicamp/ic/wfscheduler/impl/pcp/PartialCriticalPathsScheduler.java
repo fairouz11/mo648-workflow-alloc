@@ -362,7 +362,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private Task findCriticalParent(Task task, List<Host> hosts) {
-		long maxEST = 0;
+		long maxEST = -1;
 		Task criticalParent = null;
 		for (Iterator<Task> iterator = task.getDependencies().iterator(); iterator
 				.hasNext();) {
