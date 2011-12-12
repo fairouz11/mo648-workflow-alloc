@@ -2,10 +2,10 @@ package br.unicamp.ic.wfscheduler.impl.pcp;
 
 public class TimeSlot {
 	
-	private long startTime;
-	private long finishTime;
+	private double startTime;
+	private double finishTime;
 
-	public TimeSlot(long startTime, long finishTime) {
+	public TimeSlot(double startTime, double finishTime) {
 		super();
 		this.startTime = startTime;
 		this.finishTime = finishTime;
@@ -17,19 +17,19 @@ public class TimeSlot {
 		this.finishTime = -1;
 	}
 
-	public long getStartTime() {
+	public double getStartTime() {
 		return startTime;
 	}
 
-	public void setStartTime(long startTime) {
+	public void setStartTime(double startTime) {
 		this.startTime = startTime;
 	}
 
-	public long getFinishTime() {
+	public double getFinishTime() {
 		return finishTime;
 	}
 
-	public void setFinishTime(long finishTime) {
+	public void setFinishTime(double finishTime) {
 		this.finishTime = finishTime;
 	}
 	

@@ -9,7 +9,7 @@ import br.unicamp.ic.wfscheduler.Task;
 public class SchedulleResponse {
 	
 	private Task failTask;
-	private long suggestedStartTime;
+	private double suggestedStartTime;
 	private boolean successful;
 	private HashMap<Task, Assignment> schedulle;
 	
@@ -36,10 +36,10 @@ public class SchedulleResponse {
 	public void setFailTask(Task failTask) {
 		this.failTask = failTask;
 	}
-	public long getSuggestedStartTime() {
+	public double getSuggestedStartTime() {
 		return suggestedStartTime;
 	}
-	public void setSuggestedStartTime(long suggestedStartTime) {
+	public void setSuggestedStartTime(double suggestedStartTime) {
 		this.suggestedStartTime = suggestedStartTime;
 	}
 	public boolean isSuccessful() {

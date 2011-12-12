@@ -7,27 +7,27 @@ import br.unicamp.ic.wfscheduler.*;
 public class Assignment {
 	
 	private Host host;
-	private long cost;
-	public long getCost() {
+	private double cost;
+	public double getCost() {
 		return cost;
 	}
-	public void setCost(long cost) {
+	public void setCost(double cost) {
 		this.cost = cost;
 	}
-	private long startTime;
+	private double startTime;
 	public Host getHost() {
 		return host;
 	}
 	public void setHost(Host host) {
 		this.host = host;
 	}
-	public long getStartTime() {
+	public double getStartTime() {
 		return startTime;
 	}
-	public void setStartTime(long startTime) {
+	public void setStartTime(double startTime) {
 		this.startTime = startTime;
 	}
-	public Assignment(Host host, long startTime, long cost) {
+	public Assignment(Host host, double startTime, double cost) {
 		super();
 		this.host = host;
 		this.startTime = startTime;

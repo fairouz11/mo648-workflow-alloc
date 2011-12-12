@@ -16,16 +16,16 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
 	private List<Host> hosts;
 	private Broker broker;
-	private long bandwidth;
-	private long transmissionCost;
+	private double bandwidth;
+	private double transmissionCost;
 	private HashMap<Task, Assignment> schedulings;
 	private HashMap<Task, ArrayList<Task>> paisTerminados;
 	private HashMap<Task, ArrayList<Task>> childrenOf;
-	private HashMap<Task, Long> constraints;
+	private HashMap<Task, Double> constraints;
 	private double deadline;
-	private HashMap<Task, Long> METs;
-	private HashMap<Task, Long> MTTs;
-	private HashMap<Task, Long> ESTs;
+	private HashMap<Task, Double> METs;
+	private HashMap<Task, Double> MTTs;
+	private HashMap<Task, Double> ESTs;
 	private HashMap<Host, ArrayList<TimeSlot>> timeSlots;
 	
 	
@@ -68,9 +68,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		Collections.sort(tas,assgnmentsComparator);
 		for (TaskAssigned taskAssigned : tas) {
 			Task t = taskAssigned.getTask();
-			ArrayList<Host> trans = new ArrayList<Host>();
-			trans.add(schedulings.get(t).getHost());
-			broker.assign(t, schedulings.get(t).getHost());			
+			broker.assign(t, schedulings.get(t).getHost());
 		}
 	}
 
@@ -167,9 +165,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}
 	}
 	
-	private long estimateMinimumTransferTime(Task task, List<Host> hosts) {
+	private double estimateMinimumTransferTime(Task task, List<Host> hosts) {
 		// We are considering uniform bandwidth
-		long mtt;
+		double mtt;
 		if (MTTs.containsKey(task)) {
 			mtt = MTTs.get(task);
 		} else {
@@ -179,14 +177,14 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return mtt;
 	}
 
-	private long estimateMinimumExecutionTime(Task task, List<Host> hosts) {
-		long met = 999999999;
+	private double estimateMinimumExecutionTime(Task task, List<Host> hosts) {
+		double met = 999999999;
 		if (METs.containsKey(task)) {
 			met = METs.get(task);
 		} else {
 			for (Iterator<Host> iterator = hosts.iterator(); iterator.hasNext();) {
 				Host host = (Host) iterator.next();
-				long et = task.getLength() / host.getProcessingSpeed();
+				double et = task.getLength() / host.getProcessingSpeed();
 				if (met > et)
 					met = et;
 			}
@@ -195,8 +193,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return met;
 	}
 
-	private long estimateEarliestStartTime(Task task, List<Host> hosts) {
-		long maxEST = 0;
+	private double estimateEarliestStartTime(Task task, List<Host> hosts) {
+		double maxEST = 0;
 		if (ESTs.containsKey(task)) {
 			maxEST = ESTs.get(task);
 		} else {
@@ -206,34 +204,34 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return maxEST;
 	}
 	
-	private long updateEarliestStartTime(Task task, List<Host> hosts) {
-		long maxEST = findLaziestParentResponse(task, hosts);
+	private double updateEarliestStartTime(Task task, List<Host> hosts) {
+		double maxEST = findLaziestParentResponse(task, hosts);
 		ESTs.put(task, maxEST);
 		return maxEST;
 	}
 
-	private long estimateEarliestFinishTime(Task task,
+	private double estimateEarliestFinishTime(Task task,
 			List<Host> hosts) {
-		long EST = estimateEarliestStartTime(task, hosts);
-		long MET = estimateMinimumExecutionTime(task, hosts);
-		long MTT = estimateMinimumTransferTime(task, hosts);
-		long eft = EST + MET + MTT;
+		double EST = estimateEarliestStartTime(task, hosts);
+		double MET = estimateMinimumExecutionTime(task, hosts);
+		double MTT = estimateMinimumTransferTime(task, hosts);
+		double eft = EST + MET + MTT;
 		return eft;
 	}
 	
-	private long findLaziestParentResponse(Task task, List<Host> hosts) {
-		long maxEFT = 0;
+	private double findLaziestParentResponse(Task task, List<Host> hosts) {
+		double maxEFT = 0;
 		for (Iterator<Task> iterator = task.getDependencies().iterator(); iterator
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (!schedulings.containsKey(parent)) {
-				long est = estimateEarliestFinishTime(parent, hosts);
+				double est = estimateEarliestFinishTime(parent, hosts);
 				if (maxEFT < est) {
 					maxEFT = est;
 				}
 			}else{
 				Assignment assignment = schedulings.get(parent);
-				long eft = getFinishTime(parent,assignment);
+				double eft = getFinishTime(parent,assignment);
 				if (maxEFT < eft) {
 					maxEFT = eft;
 				}
@@ -244,8 +242,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	
 	
 
-	private long getFinishTime(Task t, Assignment assignment) {
-		long et = assignment.getStartTime()+(t.getLength()/assignment.getHost().getProcessingSpeed())+(t.getLength()/bandwidth);
+	private double getFinishTime(Task t, Assignment assignment) {
+		double et = assignment.getStartTime()+(t.getLength()/assignment.getHost().getProcessingSpeed())+(t.getLength()/bandwidth);
 		return et;
 	}
 
@@ -294,25 +292,25 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		
 		boolean sucesso = false;
 		schedulings = new HashMap<Task, Assignment>();
-		METs = new HashMap<Task, Long>();
-		MTTs = new HashMap<Task, Long>();
-		ESTs = new HashMap<Task, Long>();
+		METs = new HashMap<Task, Double>();
+		MTTs = new HashMap<Task, Double>();
+		ESTs = new HashMap<Task, Double>();
 	//Tem que descobrir uma maneira de adicionar as 2 tasks aki.
 	//Depois disso, descomente as linhas abaixo e comente os 2 schedulings.add()
 	
 		
-	//Além disso, tem que ver se tem problema alocar as 2 tarefas vazias a qualquer host.
+	//Alï¿½m disso, tem que ver se tem problema alocar as 2 tarefas vazias a qualquer host.
 		
 		Task entry = new DummyTask();
 		Task exit = new DummyTask();
 
 		addingTasksEntryAndExit(entry, exit);
-		schedulings.put(entry, new Assignment(null,(long) 0,(long) 0));
-	//	schedulings.put(tasks.get(0), new Assignment(hosts.get(0),(long) 0,(long) 0));
-		schedulings.put(exit, new Assignment(null,(long) deadline,(long) 0));
+		schedulings.put(entry, new Assignment(null,(double) 0,(double) 0));
+	//	schedulings.put(tasks.get(0), new Assignment(hosts.get(0),(double) 0,(double) 0));
+		schedulings.put(exit, new Assignment(null,(double) deadline,(double) 0));
 		
-		//schedulings.put(tasks.get(tasks.size()-1), new Assignment(hosts.get(0),deadline,(long) 0));
-		constraints = new HashMap<Task, Long>();
+		//schedulings.put(tasks.get(tasks.size()-1), new Assignment(hosts.get(0),deadline,(double) 0));
+		constraints = new HashMap<Task, Double>();
 		//estimateEarliestStartTime(tasks.get(tasks.size()-1), hosts);// apenas para calcular o partial critical path atual
 		estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
 		initializeTimeSlots();
@@ -362,13 +360,13 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	}
 
 	private Task findCriticalParent(Task task, List<Host> hosts) {
-		long maxEST = -1;
+		double maxEST = -1;
 		Task criticalParent = null;
 		for (Iterator<Task> iterator = task.getDependencies().iterator(); iterator
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (!schedulings.containsKey(parent)) {
-				long est = estimateEarliestFinishTime(parent, hosts);
+				double est = estimateEarliestFinishTime(parent, hosts);
 				if (maxEST < est) {
 					criticalParent = parent;
 					maxEST = est;
@@ -429,9 +427,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		Task t = criticalPath.remove(0);
 		for (Host s : hosts) {
 			System.out.println(t.getLength()+"        "+s.getID());
-			long st = computeSTconstraints(t,s,currentSchedulle,tslots);
-			long c = computeC(t,s,currentSchedulle);
-			// na verdade os constraints devem ser passados para o computeST, constraints são limites inferiores para iniciar a simulação
+			double st = computeSTconstraints(t,s,currentSchedulle,tslots);
+			double c = computeC(t,s,currentSchedulle);
+			// na verdade os constraints devem ser passados para o computeST, constraints sï¿½o limites inferiores para iniciar a simulaï¿½ï¿½o
 			sr = lookForChildrenDependencies(t,s,st);
 			if(sr.isSuccessful()){
 				currentSchedulle.put(t,new Assignment(s, st, c));
@@ -485,10 +483,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return s;
 	}
 	
-	private long computeSTconstraints(Task t, Host s,HashMap<Task, Assignment> currentSchedulle, HashMap<Host, ArrayList<TimeSlot>> ScheduletimeSlots) {
+	private double computeSTconstraints(Task t, Host s,HashMap<Task, Assignment> currentSchedulle, HashMap<Host, ArrayList<TimeSlot>> ScheduletimeSlots) {
 		boolean found = false;
-		long minST = estimateStartTimeConstraints(t,s,currentSchedulle);
-		long et = t.getLength()/s.getProcessingSpeed();
+		double minST = estimateStartTimeConstraints(t,s,currentSchedulle);
+		double et = t.getLength()/s.getProcessingSpeed();
 		ArrayList<TimeSlot> slots = ScheduletimeSlots.get(s);
 		int i = 0;
 		while(!found && i<slots.size()){
@@ -525,20 +523,20 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return minST;
 	}
 	
-	private long estimateStartTimeConstraints(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
-		long maxEFT = 0;
+	private double estimateStartTimeConstraints(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
+		double maxEFT = 0;
 		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (schedulings.containsKey(parent)) {
 				Assignment assignment = schedulings.get(parent);
-				long eft = getFinishTime(parent,assignment);
+				double eft = getFinishTime(parent,assignment);
 				if (maxEFT < eft) {
 					maxEFT = eft;
 				}
 			}else if(currentSchedulle.containsKey(parent)){
 				Assignment assignment = currentSchedulle.get(parent);
-				long eft = getFinishTime(parent,assignment);
+				double eft = getFinishTime(parent,assignment);
 				if (maxEFT < eft) {
 					maxEFT = eft;
 				}
@@ -552,11 +550,11 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return maxEFT;
 	}
 	
-	private SchedulleResponse lookForChildrenDependencies(Task t,Host s,long st){
+	private SchedulleResponse lookForChildrenDependencies(Task t,Host s,double st){
 		SchedulleResponse sr = new SchedulleResponse();
 		sr.setSuccessful(true);
 		int i = 0;
-		long et = t.getLength() / s.getProcessingSpeed();
+		double et = t.getLength() / s.getProcessingSpeed();
 		ArrayList<Task> childrenOfT = childrenOf.get(t);
 		//ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
 		while(sr.isSuccessful()&&i<childrenOfT.size()){
@@ -608,8 +606,8 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 			
 			
 			if(chi >= hosts.size()||chi <0){
-				//zera as tentativas, já que vai tentar tudo a partir da tarefa anterior
-				//currentHostIndex.put(t, 0);// Será que tem que zerar mesmo? :P
+				//zera as tentativas, jï¿½ que vai tentar tudo a partir da tarefa anterior
+				//currentHostIndex.put(t, 0);// Serï¿½ que tem que zerar mesmo? :P
 				//volta para a tarefa anterior
 				taskIndex--;
 				if (taskIndex >=0 ){
@@ -617,9 +615,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				}
 			}else{
 				Host s = hosts.get(currentHostIndex.get(t));
-				long st = computeST(t,s,currentSchedulle);
-				long c = computeC(t,s);
-				// na verdade os constraints devem ser passados para o computeST, constraints são limites inferiores para iniciar a simulação
+				double st = computeST(t,s,currentSchedulle);
+				double c = computeC(t,s);
+				// na verdade os constraints devem ser passados para o computeST, constraints sï¿½o limites inferiores para iniciar a simulaï¿½ï¿½o
 				if(constraints.containsKey(t)){
 					if(st<constraints.get(t));{
 						st = constraints.get(t);
@@ -628,7 +626,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 				ArrayList<Task> childrenOfT = lookForAllchildrenOfT(t);
 				boolean possible = true;
 				int i = 0;
-				long et = t.getLength() / s.getProcessingSpeed();
+				double et = t.getLength() / s.getProcessingSpeed();
 				while(possible&&i<childrenOfT.size()){
 					Task child = childrenOfT.get(i);
 					if (schedulings.containsKey(child)){						
@@ -647,7 +645,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 						scheduledFound = true;
 						if(bestSchedulle==null){
 							bestSchedulle = (HashMap<Task, Assignment>) currentSchedulle.clone();
-							//será q nao deveria voltar em todo caso? nao apenas se fosse melhor q o best schedulle?
+							//serï¿½ q nao deveria voltar em todo caso? nao apenas se fosse melhor q o best schedulle?
 							taskIndex--;
 							if (taskIndex >=0 ){
 								t = criticalPath.get(taskIndex);
@@ -693,7 +691,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 	private void updateChildrenESTs(ArrayList<Task> criticalPath) {
 		for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
 			Task task = (Task) iterator.next();
-			//long ft = getFinishTime(task, schedulings.get(task));
+			//double ft = getFinishTime(task, schedulings.get(task));
 			ArrayList<Task> children = childrenOf.get(task);
 			//ArrayList<Task> children = lookForAllchildrenOfT(task);
 			for (Iterator<Task> iterator2 = children.iterator(); iterator2.hasNext();) {
@@ -705,9 +703,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		}		
 	}
 
-	private long calculaCusto(HashMap<Task, Assignment> currentSchedulle) {
+	private double calculaCusto(HashMap<Task, Assignment> currentSchedulle) {
 		Set<Task> TodasAsTasks = currentSchedulle.keySet();
-		long cost = 0;
+		double cost = 0;
 		for (Task task : TodasAsTasks) {
 			cost = cost+currentSchedulle.get(task).getCost();
 		}
@@ -725,10 +723,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return children;
 	}
 */
-	private long computeC(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
-		long exCost = (long) (t.getLength()*s.getCost());
-		long parentsTransferCost = 0;
-		long childTransferCost = 0;
+	private double computeC(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
+		double exCost = (double) (t.getLength()*s.getCost());
+		double parentsTransferCost = 0;
+		double childTransferCost = 0;
 		
 		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator.hasNext();) {
 			Task parent = (Task) iterator.next();
@@ -752,10 +750,10 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return exCost+parentsTransferCost+childTransferCost;
 	}
 
-	private long computeST(Task t, Host s,HashMap<Task, Assignment> currentSchedulle) {
+	private double computeST(Task t, Host s,HashMap<Task, Assignment> currentSchedulle) {
 		boolean found = false;
-		long minST = estimateStartTime(t,s,currentSchedulle);
-		long et = t.getLength()/s.getProcessingSpeed();
+		double minST = estimateStartTime(t,s,currentSchedulle);
+		double et = t.getLength()/s.getProcessingSpeed();
 		ArrayList<TimeSlot> slots = timeSlots.get(s);
 		int i = 0;
 		while(!found && i<slots.size()){
@@ -792,20 +790,20 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		return minST;
 	}
 
-	private long estimateStartTime(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
-		long maxEFT = 0;
+	private double estimateStartTime(Task t, Host s, HashMap<Task, Assignment> currentSchedulle) {
+		double maxEFT = 0;
 		for (Iterator<Task> iterator = t.getDependencies().iterator(); iterator
 				.hasNext();) {
 			Task parent = (Task) iterator.next();
 			if (schedulings.containsKey(parent)) {
 				Assignment assignment = schedulings.get(parent);
-				long eft = getFinishTime(parent,assignment);
+				double eft = getFinishTime(parent,assignment);
 				if (maxEFT < eft) {
 					maxEFT = eft;
 				}
 			}else if(currentSchedulle.containsKey(parent)){
 				Assignment assignment = currentSchedulle.get(parent);
-				long eft = getFinishTime(parent,assignment);
+				double eft = getFinishTime(parent,assignment);
 				if (maxEFT < eft) {
 					maxEFT = eft;
 				}
