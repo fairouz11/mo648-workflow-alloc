@@ -43,7 +43,7 @@ Prof. Dr. Nelson Luis Saldanha da Fonseca\\
 
 Workflows científicos têm sido utilizados atualmente para representar uma grande variedade de aplicações envolvendo
 alto processamento e grandes capacidades de armazenamento. Alguns domínios do conhecimento tais como a biologia estrutural,
-física quântica e neuro-ciência envolvem experimentos científicos cuja análise dos dados torna-se possível apenas por meio de sua representação
+física quântica e neurociência envolvem experimentos científicos cuja análise dos dados torna-se possível apenas por meio de sua representação
 na forma de workflows científicos\cite{pso_a}.\\
 
 Um workflow pode ser descrito como um Grafo Acíclico e Direcionado \emph{(DAG, do inglês, Directed Acyclic Graph)} no qual cada tarefa 
@@ -145,12 +145,12 @@ avaliação ao final da realização deste projeto.
 Um usuário deseja executar um workflow de tarefas representado por um \emph{grafo acíclico 
 direcionado} (DAG). Cada tarefa é representada por um nó no DAG. Se uma tarefa depende de
 resultados de outra tarefa, então há um arco ligando os nós das respectivas tarefas no DAG.
-Um nó possui um peso relacionado ao número de intruções necessárias para que a tarefa seja executada.
-Já um arco possui um peso relacionado ao nho dos dados que devem ser transferidos entre tarefas
+Um nó possui um peso relacionado ao número de intrujões necessárias para que a tarefa seja executada.
+Já um arco possui um peso relacionado ao tamanho dos dados que devem ser transferidos entre tarefas
 dependentes.
 
 O usuário tem disponível uma infraestrutura de nuvem híbrida para execução do 
-seu workflow. Essa infra-estrutura é composta por diferentes nuvens: (a) uma nuvem 
+seu workflow. Essa infraestrutural é composta por diferentes nuvens: (a) uma nuvem 
 privada, onde execuções de tarefas não acarretam custos monetários ao usuário; e (b) 
 nuvens públicas nas quais o usuário paga pelo tempo de processamento utilizado.
 
@@ -163,17 +163,17 @@ nuvem híbridas dentro do deadline estipulado minimizando o custo monetário.
 
 \section{Objetivo do projeto}
 
-Este projeto teve como objetivo comparar diferentes algorítmos de escalonamento 
-para redes híbidas. Foram implementados quatro algoritmos: \emph{escalonador aleatório}, \emph{round robin},
+Este projeto teve como objetivo comparar diferentes algoritmos de escalonamento 
+para redes híbridas. Foram implementados quatro algoritmos: \emph{escalonador aleatório}, \emph{round robin},
 \emph{cost-driven scheduling using partial critial paths} e \emph{algoritmo de otimização por nuvem de partículas}.
 Os algoritmos são descritos na próxima seção.
 
-\section{Descrição dos Algorítmos}
+\section{Descrição dos Algoritmos}
 \label{algoritmos}
 
 \subsection{Algoritmo Aleatório}
 
-O algorítmo baseia-se na alocação aleatória de recursos para o processamento de tarefas do workflow.
+O algoritmo baseia-se na alocação aleatória de recursos para o processamento de tarefas do workflow.
 
 Este escalonador realiza os seguintes passos:
 
@@ -195,7 +195,7 @@ Não esperamos que nenhum dos demais escalonadores tenha uma performance inferio
 
 \subsection{Algoritmo Round Robin}
 
-O algoritmo baseia-se na alocação seqüêncial de recursos para o processamento de tarefas do workflow.
+O algoritmo baseia-se na alocação sequencial de recursos para o processamento de tarefas do workflow.
 
 Este escalonador realiza os seguintes passos:
 
@@ -242,7 +242,7 @@ dar uma breve descrição do algoritmo PSO.
 Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algorítmo originalmente 
 desenvolvido por Eberhart e Kennedy \cite{pso_article}. O PSO é inspirado na simulação do comportamento social de um 
 bando de pássaros em revoada, com movimento localmente aleatório, mas globalmente determinado. No PSO, 
-assim como em outros algorítmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
+assim como em outros algoritmos, existe uma população de indivíduos, chamados de nuvem (ou enxame) de 
 partículas, que em vez de utilizar operadores genéticos, evoluem através de cooperação e competição, entre si, 
 por diversas gerações. As partículas se beneficiam de sua própria experiência e da experiência de outros membros 
 do enxame durante a busca de um melhor fitness (alvo: comida, local para repouso, proteção de predadores, etc).
@@ -378,8 +378,8 @@ esses valores podem variar. No caso da nossa implementação, esses valores são
 no nosso projeto. No passo 10, o PSO é computado novamente para as tarefas que ainda não foram escalonadas. Os passos 6 a 10 
 são repetidos até que todas as tarefas do worflow estejam escalonadas.\\
 
-A Tabela abaixo mostra os valores utilizados na execução do algorítmo de escalonamento PSO. O número de execuções representa o número de 
-simulações independentes realizadas para cada workflow dado com entrada para o algorítmo para se calcular o Intervalo de Confiança dos resultados.\\
+A Tabela abaixo mostra os valores utilizados na execução do algoritmo de escalonamento PSO. O número de execuções representa o número de 
+simulações independentes realizadas para cada workflow dado com entrada para o algoritmo para se calcular o Intervalo de Confiança dos resultados.\\
 
 \begin{figure}[!htb]
 \centering
@@ -390,7 +390,7 @@ simulações independentes realizadas para cada workflow dado com entrada para o
 
 \section{O simulador}
 
-Para realizar a comparação dos algorítmos, foi necessário utilizar um simulador de nuvens. O simulador é
+Para realizar a comparação dos algoritmos, foi necessário utilizar um simulador de nuvens. O simulador é
 responsável por receber e tratar os pedidos de alocação de tarefas, bem como os pedidos de transmissão dos
 resultados de uma tarefa executada.
 
@@ -401,7 +401,7 @@ As alterações feitas e decisões de projeto tomadas são descritas com detalhe
 
 \subsection{Arquitetura}
 
-A fim de que fosse possível testar um número variado de algorítmos e que a implementação do escalonador
+A fim de que fosse possível testar um número variado de algoritmos e que a implementação do escalonador
 não estivesse altamente acoplada ao funcionamento do simulador, decidimos adicionar uma camada de abstração
 ao projeto.
 
@@ -474,7 +474,7 @@ Em (1) o simulador provê o DAG que contém as tarefas, suas dependências e os 
 de instruções) e os pesos dos arcos (tamanho dos dados a serem transmitidos entre tarefas dependentes).
 
 Em (2) o simulador provê uma lista de recursos da nuvem hibrida. Os recursos da nuvem privada diferem
-dos da nuvem publica por não possuirem custo atrelado a sua utilização.
+dos da nuvem publica por não possuírem custo atrelado a sua utilização.
 
 Em (3) o simulador permite que o escalonador aloque uma tarefa para execução em um recurso da nuvem.
 
@@ -563,7 +563,7 @@ O cenário foi definido como na tabela \ref{tab:datacenter}.
 Existem dois grupos de recursos. O grupo privado é livre de custos, enquanto que o grupo público possui
 um custo de utilização baseado no número de instruções executadas. 
 
-Os custos da núvem de recursos pública foi baseado nos custos de locação de máquinas de alto poder de
+Os custos da nuvem de recursos pública foi baseado nos custos de locação de máquinas de alto poder de
 processamento providos pela Amazon EC2\footnote{http://aws.amazon.com/ec2/}.
 
 As capacidades de processamento foram definidas com base em \cite{ips_wiki}. De acordo com \cite{ips_wiki},
@@ -687,7 +687,7 @@ unidades monetárias.
 
 Assim foi possível desenhar dois gráficos de barras, para cada experimento, um
 contendo o tempo de alocação do workflow, o outro seu respectivo custo. Os gráficos
-foram incluidos ao final deste relatório.
+foram incluídos ao final deste relatório.
 
 Deve-se notar que há barras de erro para alguns experimentos e escalonadores,
 devido aos fatores citados na seção \ref{grafosusados}. Em alguns gráficos não
@@ -821,9 +821,20 @@ Dependendo do contexto, essa economia de dinheiro ou tal redução no tempo de e
 ser relevante, assim deve-se examinar também em quais situações é apropriado o uso de um algoritmo
 de escalonamento refinado.
 
+Os resultados do experimento usando o grafo Chimera 2 (figuras \ref{chimera2_cost} e \ref{chimera2_time})
+se mostraram os mais interessantes, uma vez que a diferença de tempo e custo obtidas entre os escalonadores
+é de várias ordens de grandeza, como mostra a tabela \ref{tab:dados_chimera2}. Enquanto o escalonador PCO
+conseguiu economizar aproximadamente 30 mil unidades monetárias, isso só foi possível penalizando o tempo
+de execução do workflow que foi de alguns segundos para quase 4 meses.
+
+Deve-se notar a complexidade com que as dependências ocorrem no grafo Chimera 2 (figura \ref{chimera2}).
+Variações na escolha dos recursos que executarão as tarefas mais próximas à raiz pode impactar profundamente
+o tempo de execução, devido a natureza das dependências do grafo. Isso explica a grande variação dos resultados
+obtidos pelos escalonadores.
+
 \section{Extensões e trabalhos futuros}
 
-Um possível ponto de extenção a este trabalho seria examinar em quais casos torna-se relevante o uso
+Um possível ponto de extensão a este trabalho seria examinar em quais casos torna-se relevante o uso
 de algoritmos mais refinados de escalonamento. O uso do grafo Chimera 2 pode prover um bom ponto de
 partida para essa análise.
 
