@@ -93,12 +93,12 @@ Essa nuvem pública, por sua vez, fornece o serviço requerido à aplicação.\\
 
 
 Um escalonador de workflows deve levar em consideração o contexto acima para tentar escalonar as tarefas do workflow de modo 
-eficiente e a um custo reduzido dentro de redes híbridos. Os escalonadores de workflows podem ter diferentes políticas que 
+eficiente e a um custo reduzido dentro de redes híbridas. Os escalonadores de workflows podem ter diferentes políticas que 
 variam de acordo com a função objetivo: minimizar o tempo de execução total, minimizar o custo total, balancear a quantidade de recursos 
-usados ao mesmo tempo que as alcança as restrições de deadline da aplicação, e assim por diante.
+usados ao mesmo tempo que alcança as restrições de deadline da aplicação, e assim por diante.
 
 No presente trabalho, nós focamos no estudo e na implementação de quatro algoritmos para escalonamento de workflows em nuvens híbridas. 
-Dois desses algoritmos (Algoritmo aleatório e Algoritmo round robin) são, de fato, bem simples e serviram para uma comparação em relação a outros dois 
+Dois desses algoritmos (Algoritmo aleatório e Algoritmo round robin) são, de fato, bem simples e serviram para uma comparação em relação aos outros dois 
 algoritmos mais sofisticados (Partial Critical Paths e Particle Swarm Optimization). Esses algoritmos foram implementados na linguagem Java utilizando como base para 
 a sua implementação um simulador de nuvens chamado \emph{Cloudsim}\cite{cloudsim}.
 
@@ -106,8 +106,7 @@ As tarefas principais desenvolvidas neste trabalho foram:
 
 \begin{itemize}
 
-\item Estudo e aprendizado do funcionamento do simulador \emph{Cloudsim} para modelagem e simulação em computação em nuvens de 
-algoritmos de escalonamento de workflows.
+\item Implementação de um simulador capaz de tratar workflows em núvens hibridas, baseado no \emph{Cloudsim}.
 
 \item Estudo e implementação de dois algoritmos de escalonamento de workflows para redes híbridas: \emph{Partial Critical Paths e
 Particle Swarm Optimization}. Assim como a implementação de dois algoritmos mais simples, a saber, o algoritmo aleatório e o 
@@ -131,12 +130,10 @@ Podemos listar como motivações para o desenvolvimento deste trabalho:\\
 
 \item Rever os conhecimentos de simulação vistos na disciplina e colocá-los em prática para a resolução de um projeto real.
 
-\item Estudar heurísticas de escalonamento de workflows e fazer sua implementação utilizando um simulador de nuvens.
+\item Estudar heurísticas de escalonamento de workflows e fazer sua implementação utilizando um simulador de núvens.
 
-\item O objetivo de produzir um ótimo trabalho visando não somente um resultado satisfatório, mas também uma excelente 
-avaliação ao final da realização deste projeto.
-
-\item (mais coisas?....)
+\item Produzir um bom trabalho visando não somente um resultado satisfatório na disciplina, mas que também possa ser útil
+para responder a questão de quais são os cenários em que cada escalonador simulado aqui melhor se destaca.
 
 \end{itemize}
 
