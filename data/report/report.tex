@@ -221,8 +221,63 @@ Este escalonador serve como base para as comparações. Espera-se que os demais 
 aleatório) apresentem melhor performance.
 
 \subsection{Cost-driven Scheduling Using Partial Critical Paths}
+O artigo \cite{pcp} apresenta um algoritmo de escalonamento chamado \emph{Partial Critical Paths} (PCP). O Objetivo do algoritmo PCP é criar um workflow que minimize o custo de execução satisfazendo um \emph{deadline} definido pelo usuário. Primeiro o algoritmo PCP tenta escalonar o \emph{critical path} ou \emph{caminho crítico} do workflow das tarefas dentro do deadline, com o menor custo, caso seja possível, o algoritmo acha o \emph{partial critical path} ou \emph{caminho crítico parcial} de cada tarefa pertencente ao caminho crítico do gráfico e tenta escalona-lo utilizando as mesmas heurísticas.
 
-(Descrever algorítmo)
+\subsubsection{Definições Básicas do algoritmo PCP}
+Para encontrar o \emph{caminho crítico} no workflows das tarefas, é necessário primeiro estimar aproximadamente o tempo mínimo de ínicio de processamento de cada tarefa. Ou seja, o algoritmo utiliza duas noções diferentes de tempo: a \emph{Estimate Start Time} (EST) que diz respeito a uma estimativa de início de processamento daquela tarefa, e o \emph{Actual Start Time} (AST) definido após o escalonamento, e define a hora em que a tarefa deve realmente começar a ser processada.
+Tomando como base a definição de \emph{Execution Time} (tempo de execução) de uma tarefa $t_{i}$ em um host $s$ como $ET(t_{i},s)$, e a definição de \emph{Transmissio Time} (tempo de transmissão) pacote $e$, resultado do processamento de uma tarefa $t_{i}$ em um host $s$, para uma tarefa $t_{j}$ em um host $r$, como $TT(e_{i,j},s,r)$, é possível realizar o cálculo do \emph{Minimum Execution Time MET} (tempo mínimo de execução) e \emph{Minimum Trasmission Time MTT} (tempo mínimo de transmissão). onde:
+\begin{equation}
+MET(t_{i}) = min ET(t_{i},s) \\ \forall s \in hosts
+\end{equation}
+\begin{equation}
+MTT(e_{i,j}) = min TT(e_{i,j},s,r) \\ \forall s,r \in hosts
+\end{equation}
+
+A partir dessas definições, podemos comutar o $EST(t_{i})$, para qualquer tarefa $t_{i}$, que depende de um conjunto de tarefas pais $P_{i}$ no workflow da seguinte forma:
+
+\begin{eqnarray}
+EST(t_{i}) = 0, P_{i} = \phi \nonumber\\
+EST(t_{i}) = 0, max EST(t_{p})+MET(t_{p})+MTT(e_{p,i}) = \forall t_{p} \in P_{i}, P_{i} \neq \phi
+\end{eqnarray}
+
+\subsubsection{Algoritmo de escalonamento PCP}
+O algoritmo é dividido em 3 sub-rotinas, A primeira \emph{Schedule Workflow}, é responsável por preparar o ambiente de escalonamento e inicia-lo. A segunda \emph{Schedule Parents} é responsável por identificar os critical paths e ,finalmente, escalona-los através da últuma sub-rotina, \emph{Schedule Path}
+
+\textbf{Sub-Rotina Schedule Workflow}
+
+O primeiro passo dessa sub-rotina, é a adição de 2 Tarefas: \emph{entry} que vai se tornar o primeiro nó do workflow, e  a tarefa \emph{exit} que deverá ser a última do workflow. Ambas deverão ter tamanho igual a 0 e servem apenas como auxilio no algoritmo, ao final do escalonamento, essas tarefas devem ser retiradas.
+
+Depois, o algoritmo calcula o $MET(t_{i})$, $MTT(e_{i,j})$ e $EST(t_{i})$, para todas as tarefas $t_{i}$, e todas as arestas $e_{i,j}$ no grafo de workflow.
+
+Em seguida o algoritmo marca as tarefas \emph{entry} e \emph{exit} como escalonadas, e atribui $AST(entry)=0$ e $AST(exit)=deadline$.
+
+Após esse passo, o algoritmo chama a Sub-rotina \emph{Schedule Parents}, descrita na próxima seção, passando como entrada a tarefa \emph{exit}.
+
+\textbf{Sub-Rotina Schedule Parents:}
+
+O primeiro passo dessa rotina, é encontrar o \emph(Partial Critical Path) da tarefa de entrada $t_{i}$. Para isso é utilizado o conceito de \emph{critical parent} definido da seguinte forma:\\
+
+\emph{O critical parent de um nó t é a tarefa p, pertencente às dependencias de t e ainda não escalonada onde EST(p) + MET(p) + MTT($e_{p,t}$) é a maior dentre todas as dependências de p.}\\
+
+Assim, o conceito de \emph{critical path(t)} é:\\
+
+\emph{i  - cricital path(t) é vazio se t não possui dependenências não escalonadas}
+
+\emph{ii - Se t possui um critical parent, p, critical path(t) é formado por p e pelo critical path(p)}\\
+
+Baseando-se nessas definições, a sub-rotina \emph{Schedule Parents} acha o \emph{critical path} que vai da tarefa $t$ passada como entrada até alguma tarefa já escalonada. No caso da primeira chamada da rotina, o \emph{critical path} deve ir da tarefa $exit$ até a tarefa $entry$.
+
+Depois de encontrado, esse caminho, é passado para sub-rotina \emph{Schedule Path} que tenta escalona-lo com as restrições de deadline. Caso seja bem sucedido, o \emph {Schedule Parents} é chamado recursivamente para cada tarefa dentro do \emph{critical path}. Caso seja mal sucedido, o algoritmo retorna na recursão, afirmando qual a tarefa, já escalonada, que impede o escalonamento daquele caminho. Se a chamada recursiva para algum nó pertencente ao \emph{critical path} for mal sucedida, o escalonamento daquele critical path deve ser reiniciado, colocando restrições de tempo para as tarefas necessárias. Caso todas as chamdas recursivas tenham acontecido com sucesso, a rotina deve retornar que obteve sucesso, retornando na árvore de recursão.
+
+\textbf{Sub-Rotina SchedulePath}
+
+Essa rotina é baseada em na estratégia de back-tracking. Inicia na primeira tarefa do caminho passado como entrada e percorre até a última tarefa a cada. A cada passo uma tarefa seleciona um host e verifica se o escalonamento daquela tarefa naquele host, satisfaz as restrições de tempo das tarefas que dependem dela (as escalonadas anteriormente).
+
+O escalonamento é feito levando em consideração os espaços de tempo livre em cada host, ou seja, se uma tarefa $t_{i}$ está procurando um escalonamento possível em um host $s$, a tarefa busca o intervalo de tempo livre em $s$ que inicie depois de $EST(t_{i})$ e que seja grande o suficiente para processar $t$.
+
+Caso a tarefa encontre um espaço de tempo livre em $s$ capaz de terminar o processamento e transmitir a saída para todas as tarefas dependentes \emph{já escalonadas}, o algoritmo marca essa tarefa com esse host e passa para a próxima, caso contrário, a tarefa tenta um outro host. Se a tarefa não conseguir encontrar um host que satisfaça as restrições necessárias, o algoritmo volta para a tarefa anterior tentando um novo host. Caso a última tarefa consiga encontrar um escalonamento para um host válido, o escalonamento é marcado e no final, todos os escalonamentos possíveis são comparados e é escolhido o de melhor custo.
+
+Caso nenhum escalonamento válido seja encontrado, é retornado qual a tarefa já escalonada que está impendindo o escalonamento desse caminho.
 
 \subsection{Algorítmo de Otimização por Nuvem de Partículas}
 \label{psoalgo}
@@ -234,7 +289,7 @@ dois algoritmos principais: (a) A heurística de escalonamento desenvolvida pelo
 para otimização do mapeamento tarefa-máquina. Antes de apresentar os algoritmos, vamos 
 dar uma breve descrição do algoritmo PSO.
 
-\subsubsection{Particle Swarm Optimization - PSO}
+\b{Particle Swarm Optimization - PSO}
 
 Particle Swarm Optimization(PSO) ou Otimização por Nuvem de Partículas é um algorítmo originalmente 
 desenvolvido por Eberhart e Kennedy \cite{pso_article}. O PSO é inspirado na simulação do comportamento social de um 
@@ -710,8 +765,6 @@ Segue abaixo tais valores.
     \hline
     PSO & 18051.016 $\pm$ 665.137 & 91448540.479 $\pm$ 8205982.424 \\
     \hline
-    PCP & 0 & 0 \\
-    \hline
 
   \end{tabular}
   \caption{Dados da execução do Chimera 2}
@@ -719,7 +772,6 @@ Segue abaixo tais valores.
 \end{table}
 
 \begin{figure}[!htb]
-
 \centering
 
 \includegraphics[scale=.55]{graphs/airns_cost.jpeg}
@@ -787,6 +839,9 @@ Segue abaixo tais valores.
 \caption{Montage Time}
 
 \end{figure}
+\subsubsection{Problemas na execução do Partial Critical Path Scheduler}
+
+Dentre os resultados, destacou-se os problemas encotrados 
 
 \section{Conclusão}
 
