@@ -841,7 +841,15 @@ Segue abaixo tais valores.
 \end{figure}
 \subsubsection{Problemas na execução do Partial Critical Path Scheduler}
 
-Dentre os resultados, destacou-se os problemas encotrados 
+Dentre os resultados, destacou-se também os problemas encotrados na execução do PCP. Apesar do escalonamento ter sido muito bem sucedido tanto em tempo de execução quanto em custo para alguns tipos de workflows, o algoritmo atingiu um estado inesperado em alguns tipos de grafos e não foi possível encontrar um escalonamento válido.
+
+Esse estado não previsto se caracteriza quando um primeiro \emph{partial critical path} encontrado é escalonado com sucesso, em seguida, um segundo \emph{partial critical path} também é escalonado com sucesso, porém, um terceiro \emph{partial critical path} não consegue ser escalonado e a tarefa que está impedindo o escalonamento, está no \emph{partial critical path} inicial, nesse caso o escalonamento é refeito para esse caminho, com as novas restrições, porém, o escalonamento do \emph{partial path} inicial não é bem sucedido em razão de não conseguir escalonar as tarefas a tempo do segundo \emph{partial critical path} já escalonado.
+
+A sequencia de passos, que resulta nesse estado e um exemplo de grafo que pode causa-lo estão dispostos na figura abaixo
+
+Como o algoritmo não prevê esse caso, não é possível desmarcar o escalonamento de tarefas já bem sucedidas, após retornar para um nível acima na árvore de recursão.
+
+Nos casos em que o primeiro \emph{partial critical path} da sequencia de passos descrita era o \emph{critical path} do grafo inteiro, o algoritmo parava antes da hora, informando que não existia escalonamento válido.  Em outros grafos testados, em que o primeiro \emph{partial critical path} da sequencia de passos descrita era um \emph{partial critical path} interno, o PCP não parou antes da hora, porém, entrou em loop infinito.
 
 \section{Conclusão}
 
@@ -856,7 +864,7 @@ O escalonador PSO destaca-se por obter um baixo custo de alocação, contudo por
 valores de \emph{deadline} o tempo de execução das tarefas tende a ser o pior encontrado
 entre os algoritmos examinados.
 
-O escalonador PCP   8888888888complete aqui8888888888 .
+O escalonador PCP mostrou muito mais eficiente em relação ao custo quando comparado a outros algoritmos, mesmo com a restrição de deadline, porém, em alguns casos, não conseguiu encontrar um escalonamento válido por entrar em um estado durante o escalonamento. Não se pode afirmar que esse estado não previsto é uma falha na elaboração do algoritmo, porém, não foram encontradas restrições que impeçam que o escalonamento encotre esse estado.
 
 Não foi explicitamente medido o tempo de execução de cada escalonador, contudo percebemos,
 durante as execuções dos experimentos que, ambos PCO e PCP, demandaram algumas horas para
@@ -883,6 +891,8 @@ Deve-se notar a complexidade com que as dependências ocorrem no grafo Chimera 2
 Variações na escolha dos recursos que executarão as tarefas mais próximas à raiz pode impactar profundamente
 o tempo de execução, devido a natureza das dependências do grafo. Isso explica a grande variação dos resultados
 obtidos pelos escalonadores.
+
+As análises dos graficos do experimento utilizando tanto o grafo Chimera 1 quanto o Montage, destacam-se pela alta performance do algoritmo PCP. Pode-se perceber alta eficiência em custo do algoritmo PCP mesmo a partir de baixos deadlines estabelecidos.
 
 \section{Extensões e trabalhos futuros}
 
