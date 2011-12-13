@@ -14,6 +14,7 @@ import br.unicamp.ic.wfscheduler.*;
 
 public class PartialCriticalPathsScheduler implements IScheduler {
 	private List<Task> tasks;
+	Task exit;
 	private List<Host> hosts;
 	private Broker broker;
 	private double bandwidth;
@@ -171,21 +172,23 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		if (MTTs.containsKey(task)) {
 			mtt = MTTs.get(task);
 		} else {
-			mtt = task.getLength() / bandwidth;
+			mtt = task.getOutputSize() / bandwidth;
 			MTTs.put(task, mtt);
 		}
 		return mtt;
 	}
 
 	private double estimateMinimumExecutionTime(Task task, List<Host> hosts) {
-		double met = 999999999;
+		double met = -1;
 		if (METs.containsKey(task)) {
 			met = METs.get(task);
 		} else {
 			for (Iterator<Host> iterator = hosts.iterator(); iterator.hasNext();) {
 				Host host = (Host) iterator.next();
 				double et = task.getLength() / host.getProcessingSpeed();
-				if (met > et)
+				if (met == -1)
+					met = et;
+				else if (met > et)
 					met = et;
 			}
 		}
@@ -295,24 +298,15 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		METs = new HashMap<Task, Double>();
 		MTTs = new HashMap<Task, Double>();
 		ESTs = new HashMap<Task, Double>();
-	//Tem que descobrir uma maneira de adicionar as 2 tasks aki.
-	//Depois disso, descomente as linhas abaixo e comente os 2 schedulings.add()
-	
-		
-	//Al�m disso, tem que ver se tem problema alocar as 2 tarefas vazias a qualquer host.
-		
 		Task entry = new DummyTask();
-		Task exit = new DummyTask();
-
+		exit = new DummyTask();
 		addingTasksEntryAndExit(entry, exit);
 		schedulings.put(entry, new Assignment(null,(double) 0,(double) 0));
-	//	schedulings.put(tasks.get(0), new Assignment(hosts.get(0),(double) 0,(double) 0));
 		schedulings.put(exit, new Assignment(null,(double) deadline,(double) 0));
-		
-		//schedulings.put(tasks.get(tasks.size()-1), new Assignment(hosts.get(0),deadline,(double) 0));
 		constraints = new HashMap<Task, Double>();
-		//estimateEarliestStartTime(tasks.get(tasks.size()-1), hosts);// apenas para calcular o partial critical path atual
-		estimateEarliestStartTime(exit, hosts);// apenas para calcular o partial critical path atual
+		estimateEarliestStartTime(exit, hosts);
+		System.out.println(ESTs.get(exit));
+		
 		initializeTimeSlots();
 		calculaTodosOsFilhos();
 		imprimefilhos();
@@ -322,7 +316,23 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		eliminateEntryAndExit(entry,exit);
 		return sucesso;
 	}
-
+	
+//	private SchedulleResponse ScheduleParents2(Task task) {
+//		if (!hasUnscheduledParents(task)) {
+//			SchedulleResponse sr = new SchedulleResponse();
+//			sr.setSuccessful(true);
+//			return sr;
+//		}else{
+//			Task taskI = task;
+//			ArrayList<Task> criticalPath = new ArrayList<Task>();
+//			while (hasUnscheduledParents(taskI)) {
+//				Task criticalParent = findCriticalParent(taskI, hosts);
+//				criticalPath.add(0, criticalParent);
+//				taskI = criticalParent;
+//			}
+//		}
+//	}
+	
 	private SchedulleResponse ScheduleParents(Task task) {
 		if (!hasUnscheduledParents(task)) {
 			SchedulleResponse sr = new SchedulleResponse();
@@ -392,23 +402,23 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		
 		HashMap<Task, Assignment> currentSchedulle = new HashMap<Task, Assignment>();
 		HashMap<Host, ArrayList<TimeSlot>> currentTimeSlots = (HashMap<Host, ArrayList<TimeSlot>>) timeSlots.clone();
-		System.out.println("-----------------------------------------------------");
-		System.out.println("CRITICAL PATH: "+printPath(criticalPath));
-		System.out.println("-----------------------------------------------------");
-		System.out.println(" Task              Host ");
-		System.out.println("------------------------");
+//		System.out.println("-----------------------------------------------------");
+//		System.out.println("CRITICAL PATH: "+printPath(criticalPath));
+//		System.out.println("-----------------------------------------------------");
+//		System.out.println(" Task              Host ");
+//		System.out.println("------------------------");
 		SchedulleResponse sr = SchedulePathRecursive(criticalPath, currentSchedulle, currentTimeSlots);
 		if (sr.isSuccessful()){
-			System.out.println("------------------------");
-			System.out.println("CRITICAL PATH ESCALONADO");
-			System.out.println(printSchedule(sr.getSchedulle()));
+//			System.out.println("------------------------");
+//			System.out.println("CRITICAL PATH ESCALONADO");
+//			System.out.println(printSchedule(sr.getSchedulle()));
 			for (Iterator<Task> iterator = criticalPath.iterator(); iterator.hasNext();) {
 				Task task = (Task) iterator.next();
 				schedulings.put(task, sr.getSchedulle().get(task));
 			}
 			updateChildrenESTs(criticalPath);
 		}else{
-			System.out.println("SCHEDDULE FAIL! TASK: "+sr.getFailTask().getLength());
+//			System.out.println("SCHEDDULE FAIL! TASK: "+sr.getFailTask().getLength());
 		}
 		return sr;
 	}
@@ -426,7 +436,7 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		sr.setSuccessful(true);
 		Task t = criticalPath.remove(0);
 		for (Host s : hosts) {
-			System.out.println(t.getLength()+"        "+s.getID());
+//			System.out.println(t.getLength()+"        "+s.getID());
 			double st = computeSTconstraints(t,s,currentSchedulle,tslots);
 			double c = computeC(t,s,currentSchedulle);
 			// na verdade os constraints devem ser passados para o computeST, constraints s�o limites inferiores para iniciar a simula��o
@@ -437,21 +447,21 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 					sr = SchedulePathRecursive(criticalPath, currentSchedulle, ScheduletimeSlots);
 				}else{
 					sr.setSchedulle(currentSchedulle);
-					System.out.println("Schedule found! :"+printSchedule(sr.getSchedulle()));
+//					System.out.println("Schedule found! :"+printSchedule(sr.getSchedulle()));
 				}
-				System.out.println("task "+t.getLength()+" Testing Schedule: ");
+//				System.out.println("task "+t.getLength()+" Testing Schedule: ");
 				if(sr.getSchedulle()!=null){
 					if(bestSchedulle==null){
-						System.out.println("     best so far: "+printSchedule(sr.getSchedulle()));
+//						System.out.println("     best so far: "+printSchedule(sr.getSchedulle()));
 						bestSchedulle = (HashMap<Task, Assignment>) sr.getSchedulle().clone();					
 					}else{					
 						if(calculaCusto(sr.getSchedulle())<calculaCusto(bestSchedulle)){
-							System.out.println("   its the best! "+printSchedule(sr.getSchedulle()));
+//							System.out.println("   its the best! "+printSchedule(sr.getSchedulle()));
 							bestSchedulle = (HashMap<Task, Assignment>) sr.getSchedulle().clone();
 						}else{
-							System.out.println("     not the best");
-							System.out.println("         best one: "+calculaCusto(bestSchedulle));
-							System.out.println("          current: "+calculaCusto(sr.getSchedulle()));
+//							System.out.println("     not the best");
+//							System.out.println("         best one: "+calculaCusto(bestSchedulle));
+//							System.out.println("          current: "+calculaCusto(sr.getSchedulle()));
 						}
 					}
 				} 
@@ -560,9 +570,9 @@ public class PartialCriticalPathsScheduler implements IScheduler {
 		while(sr.isSuccessful()&&i<childrenOfT.size()){
 		Task child = childrenOfT.get(i);
 		if (schedulings.containsKey(child)){						
-			if((st+et+(t.getLength()/bandwidth))>schedulings.get(child).getStartTime()){
+			if((st+et+(t.getOutputSize()/bandwidth))>schedulings.get(child).getStartTime()){
 				sr.setFailTask(child);
-				sr.setSuggestedStartTime(st+et+(t.getLength()/bandwidth));
+				sr.setSuggestedStartTime(st+et+(t.getOutputSize()/bandwidth));
 				sr.setSuccessful(false);
 			}else{
 				sr.setSuccessful(true);
