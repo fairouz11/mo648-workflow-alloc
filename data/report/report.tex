@@ -732,6 +732,7 @@ Há apenas um grafo neste conjunto.
 \end{figure}
 
 \subsection{Resultados}
+\label{resultados}
 
 De cada experimento foram obtidos dois dados. Um primeiro é o tempo, em segundos,
 de execução do workflow escalonado, o outro, seu respectivo custo monetário, em 
@@ -770,6 +771,11 @@ Segue abaixo tais valores.
   \caption{Dados da execução do Chimera 2}
   \label{tab:dados_chimera2}
 \end{table}
+
+Para as execuções dos grafos Chimear 1 (figura \ref{chimera1}) e Montage (figura \ref{montage})
+o algoritmo PCP obteve valores de custo inferiores a 0.1 unidade monetária e
+portanto não é possivel visualizar tais valores nos gráficos 10
+e 16. 
 
 \begin{figure}[!htb]
 \centering
@@ -839,13 +845,27 @@ Segue abaixo tais valores.
 \caption{Montage Time}
 
 \end{figure}
+
+
 \subsubsection{Problemas na execução do Partial Critical Path Scheduler}
+\label{ppppc}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.5]{figures/pcp_issue.jpg}
+\label{issue_pcp}
+\caption{PCP issue}
+
+\end{figure}
+
 
 Dentre os resultados, destacou-se também os problemas encotrados na execução do PCP. Apesar do escalonamento ter sido muito bem sucedido tanto em tempo de execução quanto em custo para alguns tipos de workflows, o algoritmo atingiu um estado inesperado em alguns tipos de grafos e não foi possível encontrar um escalonamento válido.
 
 Esse estado não previsto se caracteriza quando um primeiro \emph{partial critical path} encontrado é escalonado com sucesso, em seguida, um segundo \emph{partial critical path} também é escalonado com sucesso, porém, um terceiro \emph{partial critical path} não consegue ser escalonado e a tarefa que está impedindo o escalonamento, está no \emph{partial critical path} inicial, nesse caso o escalonamento é refeito para esse caminho, com as novas restrições, porém, o escalonamento do \emph{partial path} inicial não é bem sucedido em razão de não conseguir escalonar as tarefas a tempo do segundo \emph{partial critical path} já escalonado.
 
-A sequencia de passos, que resulta nesse estado e um exemplo de grafo que pode causa-lo estão dispostos na figura abaixo
+A sequencia de passos, que resulta nesse estado e um exemplo de grafo que pode causa-lo estão dispostos na figura 18.
 
 Como o algoritmo não prevê esse caso, não é possível desmarcar o escalonamento de tarefas já bem sucedidas, após retornar para um nível acima na árvore de recursão.
 
