@@ -10,7 +10,8 @@
 \DeclareGraphicsExtensions{.pdf,.png,.eps}
 % pacote para fórmulas matemáticas
 \usepackage{amsmath}
-
+% pacote para row spam em tabelas
+\usepackage{multirow}
 
 \title{Comparação de algoritmos de escalonamento de workflows para redes híbridas}
 \author{Aloisio Vilas-Boas\and Andre Petris Esteve\and Atilio Gomes Luiz}
@@ -52,7 +53,7 @@ Um usuário deseja executar um workflow de tarefas representado por um \emph{gra
 direcionado} (DAG). Cada tarefa é representada por um nó no DAG. Se uma tarefa depende de
 resultados de outra tarefa, então há um arco ligando os nós das respectivas tarefas no DAG.
 Um nó possui um peso relacionado ao número de intruções necessárias para que a tarefa seja executada.
-Já um arco possui um peso relacionado ao tamanho dos dados que devem ser transferidos entre tarefas
+Já um arco possui um peso relacionado ao nho dos dados que devem ser transferidos entre tarefas
 dependentes.
 
 O usuário tem disponível uma infraestrutura de nuvem híbrida para execução do 
@@ -134,7 +135,7 @@ aleatório) apresentem melhor performance.
 (Descrever algorítmo)
 
 \subsection{Algorítmo de Otimização por Nuvem de Partículas}
-
+\label{psoalgo}
 A solução para o problema de escalonamento, apresentada no artigo \cite{pso_a}, é baseada numa heurística 
 denominada \emph{Particle Swarm Optimization} (PSO) ou \emph{Otimização por Nuvem de Partículas}. A heurística de 
 escalonamento tem como objetivo otimizar 
@@ -430,6 +431,8 @@ a tarefa consome processamento do recurso, mas não avança sua execução.
 
 \section{Metodologia}
 
+\subsection{Preparação}
+
 O experimento proposto deseja verificar a performance dos algoritmos de escalonamento
 descritos na seção \ref{algoritmos}. Para isso foi estipulado um cenário padrão, que
 compreende a configuração dos recursos nos quais as tarefas serão executadas.
@@ -439,24 +442,124 @@ O cenário foi definido como na tabela \ref{tab:datacenter}.
 \begin{table}
 \centering
 
-  \begin{tabular}{|l|l|}  
-
-%    Datacenter & Processamento (kMIPS) & C \\ \hline
-%    a & b &c \\ \hline
+  \begin{tabular}{|c|c|c|c|}  
+    \hline
+    Datacenter & Processadores & Processamento (kMIPS) & Custo (\$/I) \\
+    \hline
+    Público & 2 & 1 & 0,0000322222 \\
+    \hline
+    Público & 5 & 1 & 0,0000322222 \\
+    \hline
+    Público & 5 & 1 & 0,0000322222 \\
+    \hline
+    Público & 10 & 1 & 0,00007 \\
+    \hline
+    Privado & 10 & 1 & 0 \\
+    \hline
+    Privado & 15 & 1 & 0 \\
+    \hline
+    \hline
+    Largura de banda (MB$\backslash$s)& \multicolumn{3}{|c|}{12,5} \\
+    \hline
 
   \end{tabular}
-  \caption{Configuração de recursos usada no experimento}
+  \caption{Configuração dos recursos no experimento}
   \label{tab:datacenter}
 \end{table}
 
-O experimento consiste da execução de diversos DAGs (vide seção \ref{grafosusados}),
-cada grafo representando um workflow.
+Existem dois grupos de recursos. O grupo privado é livre de custos, enquanto que o grupo público possui
+um custo de utilização baseado no número de instruções executadas. 
 
+Os custos da núvem de recursos pública foi baseado nos custos de locação de máquinas de alto poder de
+processamento providos pela Amazon EC2\footnote{http://aws.amazon.com/ec2/}.
+
+As capacidades de processamento foram definidas com base em \cite{ips_wiki}. De acordo com \cite{ips_wiki},
+um \emph{Pentium 4 Extreme Edition} é capaz de realizar aproximadamente 10 kMIPS.
+
+Deve-se notar a diferença de capacidade de processamento entre os recursos públicos das linhas 1 e 2.
+O recurso da linha 1 possui menos poder de processamento pelo menos preço do recurso da linha dois. Essa
+variação foi introduzida propositalmente no experimento para acentuar a diferença entre os escalonadores.
+
+\subsection{Experimento realizado}
+
+Este projeto foi dividido em vários experimentos. Cada um deles consiste na execução de um conjunto (possivelmente unitário)
+de DAGs. Cada conjunto é definido em (vide seção \ref{grafosusados}). Cada DAG representa um workflow.
+
+Os grafos foram obtidos através de um gerador aleatório de DAGs. Para todos os grafos gerados,
+os parâmetros abaixo foram considerados.
+
+\begin{table}
+\centering
+
+  \begin{tabular}{|c|c|c|}  
+    \hline
+    \multirow{2}{*}{Número de tarefas} & Mínimo & 20\\
+                                       & Máximo & 100 \\
+    \hline
+    \multirow{2}{*}{Custo da tarefa (kMIPS)} & Mínimo & 60 \\
+                                             & Máximo & 1200 \\
+    \hline
+    \multirow{2}{*}{Tamanho dos resultados (kB)} & Mínimo & 10 \\
+                                                 & Máximo & 10000 \\
+    \hline
+
+  \end{tabular}
+  \caption{Parâmetro de aleatorização de workflows}
+  \label{tab:param_workflow}
+\end{table}
 
 \subsection{Grafos usados}
 \label{grafosusados}
 
-(Descrever grafos usados)
+Para o escalonador PSO (vide seção \ref{psoalgo}), que possui componentes aleatórias para o cálculo do escalonamento e
+para os grafos aleatórios (vide seção \ref{grafaleatorio}), foram calculados os intervalos de confiança considerando 
+95\% de nível de confiança.
+
+Os demais escalonadores não possuem componentes aleatórias, com exceção do random. Contudo o objetivo deste último
+é apenas prover um resultado de prova, a fim de ser comparado com resultados de outros escalonadores. A intenção é
+verificar se nenhum escalonador comporta-se de maneira inferior ao algoritmo randômico.
+
+Os demais grafos possuem apenas um representante no experimento, desta forma, a repetição do experimento não traria
+variação nos resultados, dispensando o cálculo do intervalo de confiança.
+
+\subsubsection{Aleatório}
+\label{grafaleatorio}
+
+Um conjunto de 21 grafos aleatórios foi gerado. Como resultado, foi considerada a média dos resultados
+da simulação de cada um dos 21 grafos aleatórios.
+
+Para todos os escalonadores, calculou-se o intervalo de confiança usando a distribuição t-Sudent com
+20 graus de liberdade.
+
+\subsubsection{AIRSN}
+
+Vide figura \ref{airsn}.
+
+Há apenas um grafo neste conjunto.
+
+\subsubsection{Chimera 1}
+
+Vide figura \ref{chimera1}.
+
+Há apenas um grafo neste conjunto.
+
+\subsubsection{Chimera 2}
+
+Vide figura \ref{chimera2}.
+
+Há apenas um grafo neste conjunto.
+
+\subsubsection{LIGO}
+
+Vide figura \ref{ligo}.
+
+Há apenas um grafo neste conjunto.
+
+\subsubsection{Montage}
+
+Vide figura \ref{montage}.
+
+Há apenas um grafo neste conjunto.
 
 \begin{figure}[!htb]
 
@@ -465,43 +568,177 @@ cada grafo representando um workflow.
 \caption{AIRSN \protect\cite{bit}}
 \label{airsn}
 
-\centering
 \includegraphics[scale=.25]{figures/chimera1.png}
 \caption{Chimera 1 \protect\cite{bit}}
 \label{chimera1}
 
-\centering
 \includegraphics[scale=.25]{figures/chimera2.png}
 \caption{Chimera 2 \protect\cite{bit}}
 \label{chimera2}
 
-\centering
 \includegraphics[scale=.25]{figures/ligo.png}
 \caption{LIGO \protect\cite{bit}}
 \label{ligo}
 
-\centering
 \includegraphics[scale=.25]{figures/montage.png}
 \caption{Montage \protect\cite{bit}}
 \label{montage}
 
 \end{figure}
 
-\subsection{Experimentos realizados}
-
-(Descrever os experimentos - tipos de coisas q vamos plotar e analisar)
-
 \subsection{Resultados}
 
-(Resultados, gráficos...)
+De cada experimento foram obtidos dois dados. Um primeiro é o tempo, em segundos,
+de execução do workflow escalonado, o outro, seu respectivo custo monetário, em 
+unidades monetárias.
+
+Assim foi possível desenhar dois gráficos de barras, para cada experimento, um
+contendo o tempo de alocação do workflow, o outro seu respectivo custo. Os gráficos
+foram incluidos ao final deste relatório.
+
+Deve-se notar que há barras de erro para alguns experimentos e escalonadores,
+devido aos fatores citados na seção \ref{grafosusados}. Em alguns gráficos não
+é possível perceber barras de erro devido a escala utilizada. Para tais experimentos
+pode-se considerar o erro associado desprezível.
+
+Destaca-se, entre os experimentos, o relativo ao Chimera 2 (figuras \ref{chimera2_cost} e 
+\ref{chimera2_time}). O tempo de execução deste workflow escalonado pelo algoritmo PSO
+foi extremamente alto. Assim, devido grande diferença dos
+resultados, não é possível ver no gráfico do tempo os valores obtidos pelos demais escalonadores.
+Segue abaixo tais valores.
+
+\begin{table}
+\centering
+
+  \begin{tabular}{|c|c|c|}  
+    \hline
+    \textbf{Escalonador} & \textbf{Custo} (\$) & \textbf{Tempo (s)} \\
+    \hline
+    Random & 48148.027 & 4.798 \\
+    \hline
+    Round-robin & 61510.473 & 6.094 \\
+    \hline
+    PSO & 18051.016 $\pm$ 665.137 & 91448540.479 $\pm$ 8205982.424 \\
+    \hline
+    PCP & 0 & 0 \\
+    \hline
+
+  \end{tabular}
+  \caption{Dados da execução do Chimera 2}
+  \label{tab:dados_chimera2}
+\end{table}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.55]{graphs/airns_cost.jpeg}
+\label{airsn_cost}
+\caption{AIRSN Cost}
+
+\includegraphics[scale=.55]{graphs/airns_time.jpeg}
+\label{airsn_time}
+\caption{AIRSN Time}
+
+\end{figure}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.55]{graphs/chimera1_cost.jpeg}
+\label{chimera1_cost}
+\caption{Chimera 1 Cost}
+
+\includegraphics[scale=.55]{graphs/chimera1_time.jpeg}
+\label{chimera1_time}
+\caption{Chimera 1 Time}
+
+\end{figure}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.55]{graphs/chimera2_cost.jpeg}
+\label{chimera2_cost}
+\caption{Chimera 2 Cost}
+
+\includegraphics[scale=.55]{graphs/chimera2_time.jpeg}
+\label{chimera2_time}
+\caption{Chimera 2 Time}
+
+\end{figure}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.55]{graphs/slideligo_cost.jpeg}
+\label{ligo_cost}
+\caption{LIGO Cost}
+
+\includegraphics[scale=.55]{graphs/slideligo_time.jpeg}
+\label{ligo_time}
+\caption{LIGO Time}
+
+\end{figure}
+
+\begin{figure}[!htb]
+
+\centering
+
+\includegraphics[scale=.55]{graphs/papermontage_cost.jpeg}
+\label{montage_cost}
+\caption{Montage Cost}
+
+\includegraphics[scale=.55]{graphs/papermontage_time.jpeg}
+\label{montage_time}
+\caption{Montage Time}
+
+\end{figure}
 
 \section{Conclusão}
 
-(Conclusões)
+Com base nos resultados obtidos, podemos perceber que existe certa variação nos
+objetivos de cada algoritmo.
+
+Os escalonadores aleatório e round-robin serviram para o único propósito de comparar
+o desempenho dos demais escalonadores, servindo como limitantes superiores para custo
+e tempo.
+
+O escalonador PSO destaca-se por obter um baixo custo de alocação, contudo por não considerar
+valores de \emph{deadline} o tempo de execução das tarefas tende a ser o pior encontrado
+entre os algoritmos examinados.
+
+O escalonador PCP ____________________ complete aqui ____________________________ .
+
+Não foi explicitamente medido o tempo de execução de cada escalonador, contudo percebemos,
+durante as execuções dos experimentos que, ambos PCO e PCP, demandaram algumas horas para
+executar as alocações.
+
+Dado o custo extremamente baixo exercido pela Amazon EC2, o qual foi usado como base para
+o experimento, vemos que o uso de algoritmos refinados para decidir a alocação pode não ser
+prático.
+
+Desconsiderando o grafo Chimera 2, a maior diferença de custo obtida foi de aproximadamente
+3 unidades monetárias (figura \ref{airsn_cost}) - o que economizou aproximadamente
+25 minutos no tempo de execução do workflow (PCO x aleatório).
+Dependendo do contexto, essa economia de dinheiro ou tal redução no tempo de execução pode não
+ser relevante, assim deve-se examinar também em quais situações é apropriado o uso de um algoritmo
+de escalonamento refinado.
+
+\section{Extensões e trabalhos futuros}
+
+Um possível ponto de extenção a este trabalho seria examinar em quais casos torna-se relevante o uso
+de algoritmos mais refinados de escalonamento. O uso do grafo Chimera 2 pode prover um bom ponto de
+partida para essa análise.
 
 \section{Agradecimentos}
 
-Agradecimentos
+Gostaríamos de agradecer a Luiz Bittencourt por nos
+prover o gerador de DAGs usado nos experimentos, além de sua orientação e
+conselhos, que foram fundamentais para o sucesso deste projeto.
 
 \begin{thebibliography}{9}
 
@@ -533,7 +770,11 @@ of the Heterogeneous Earliest Finish Time Algorithm}.
    James Kennedy, Russel Eberhart. 
    \emph{Particle swarm optimization}. 
    In: IEEE International Conference on Neural Networks. 1995.
- 
+
+\bibitem{ips_wiki}
+   Instructions per second, Wikipedia, Multiple contributors.
+   \emph{http://en.wikipedia.org/wiki/Instructions\_per\_second}. 
+   Último acesso em 12/12/2011.
 
 \end{thebibliography}
 
