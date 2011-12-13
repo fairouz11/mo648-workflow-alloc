@@ -18,9 +18,9 @@ function getName() {
     elif [ "$1" == "pso" ]
     then
         echo "PSO"
-    elif [ "$1" == "pcs" ]
+    elif [ "$1" == "pcp" ]
     then
-        echo "PCS"
+        echo "PCP"
     else
         echo "NONE"
     fi
